@@ -1,0 +1,84 @@
+
+stages:
+  - build
+  - deploy
+
+variables:
+  APP_REGISTRY: gamecenter-api
+  APP_TAG_LATEST: $APPSCYCLONE_REGISTRY/$APP_REGISTRY:$CI_COMMIT_REF_NAME-latest
+  APP_TAG_COMMIT: $APPSCYCLONE_REGISTRY/$APP_REGISTRY:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+
+build_docker_dev: &build
+  stage: build
+  image: docker:23.0-cli
+  services:
+    - docker:dind
+  variables:
+    env: $ENV_DEV
+  only:
+    - develop
+  script:
+    # define .env
+    - cat $env > .env
+
+    # login docker registry
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS $APPSCYCLONE_REGISTRY
+    - docker build -t $APP_TAG_LATEST -t $APP_TAG_COMMIT .
+
+    - docker push $APP_TAG_LATEST
+    - docker push $APP_TAG_COMMIT
+
+    - docker rmi -f $APP_TAG_LATEST $APP_TAG_COMMIT
+
+# build_docker_staging:
+#   <<: *build
+#   variables:
+#     env: $ENV_STAGING
+#   only:
+#     - staging
+
+build_docker_prod:
+  <<: *build
+  variables:
+    env: $ENV_PROD
+  only:
+    - master
+
+deploy_dev: &deploy
+  stage: deploy
+  image: alpine:3.15
+  variables:
+    USER: $USER_DEV
+    KEY: $KEY_DEV
+    IP_SERVER: $SERVER_DEV
+
+  only:
+    - develop
+  script:
+    #ssh to server
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - chmod -R 700 ~/.ssh/
+    - (umask  077 ; echo $KEY | base64 -d > ~/.ssh/block-deploy)
+    - chmod 600 ~/.ssh/block-deploy
+    - ssh-keyscan -t rsa $IP_SERVER > ~/.ssh/known_hosts
+    - ssh -i ~/.ssh/block-deploy -o StrictHostKeyChecking=no $USER@$IP_SERVER "cd game_center_api;docker compose pull;docker compose up -d "
+
+
+# deploy_staging:
+#   <<: *deploy
+#   variables:
+#     USER: $USER_STAGING
+#      KEY: $KEY_STAGING
+#      IP_SERVER: $SERVER_STAGING
+#   only:
+#     - staging
+
+deploy_prod:
+  <<: *deploy
+  variables:
+    USER: $USER_PROD
+    KEY: $KEY_PROD
+    IP_SERVER: $SERVER_PROD
+  only:
+    - master
