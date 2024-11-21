@@ -96,36 +96,6 @@ export class User extends AppBaseEntity {
         }
     }
 
-    static async updateCoin(
-        id: string,
-        numberCoin: number,
-        manager: EntityManager = AppDataSource.manager
-    ) {
-        const res = await User.findOne({
-            where: {
-                id: id,
-            },
-        })
-
-        if (!res) {
-            throw Errors.UserIdExisted
-        }
-
-        res.coin += numberCoin
-        await manager.update(User, { id }, { ...res })
-        const cacheManager = Container.get(CacheManager)
-        await cacheManager.del(CacheKeys.user(id))
-        const user = plainToInstance(UserDTO, res, {
-            excludeExtraneousValues: true,
-        })
-        await cacheManager.setObject(
-            CacheKeys.user(id),
-            user,
-            CacheTimes.day(30)
-        )
-
-        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
-    }
 
     static async validateUserInfo(data: { id?: string }) {
         const { id } = data
@@ -142,46 +112,5 @@ export class User extends AppBaseEntity {
             throw Errors.UserIdExisted
         }
     }
-
-    static async getLeaderBoard(userId: string) {
-        const cacheManager = Container.get(CacheManager)
-        const ids: string[] = await cacheManager.getLeaderBoardWithTop(
-            CacheKeys.leaderBoard(),
-            9
-        )
-        const res: LeaderBoardDTO[] = []
-        for (const id of ids) {
-            const user = await this.getUser(id)
-            if (user) {
-                const lD = new LeaderBoardDTO()
-                lD.firstName = user.firstName
-                lD.lastName = user.lastName
-                lD.username = user.username
-                lD.coin = user.coin
-                lD.rank = ids.indexOf(id) + 1
-                res.push(lD)
-            }
-        }
-        const lD = new LeaderBoardDTO()
-        const user = await this.getUser(userId)
-        lD.firstName = user.firstName
-        lD.lastName = user.lastName
-        lD.username = user.username
-        lD.coin = user.coin
-        lD.rank =
-            (await cacheManager.getUserRank(CacheKeys.leaderBoard(), userId)) +
-            1
-        return {
-            user: lD,
-            leaderBoard: res,
-        }
-    }
-
-    static async updateCoinToRedisLeaderBoard() {
-        const users: User[] = await User.find()
-        const cacheManager = Container.get(CacheManager)
-        for (const user of users) {
-            await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
-        }
-    }
+    
 }
