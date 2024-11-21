@@ -3,8 +3,6 @@ import { App } from './app'
 import { config } from './configs'
 import { HealthRoute } from './modules/health/health.route'
 import { UserRoute } from './modules/user/user.route'
-import { InvoiceRoute } from './modules/invoice/invoice.route'
-import { TransactionRoute } from './modules/transaction/transaction.route'
 import { WalletRoute } from './modules/wallet/wallet.route'
 import { GameRoute } from './modules/game/game.route'
 
@@ -16,8 +14,6 @@ const app = new App(config, [
         version: 'v1',
         routes: [
             UserRoute,
-            InvoiceRoute,
-            TransactionRoute,
             WalletRoute,
             GameRoute,
         ],

@@ -28,35 +28,9 @@ export class UserRoute implements BaseRoute {
 
     private initRoutes() {
         this.router.get(
-            '/generate-payload',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
-            this.userController.generatePayload.bind(this.userController)
-        )
-        this.router.post(
-            '/check-proof',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
-            this.userController.checkProof.bind(this.userController)
-        )
-        this.router.get(
             '/get-user-info',
             this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
             this.userController.getUserInfo.bind(this.userController)
-        )
-        this.router.post(
-            '/update-coin',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
-            transformDecryptAndValidate(
-                CoinReqDTO,
-                this.config.secretKey,
-                this.config.ivKey
-            ),
-            this.userController.updateCoin.bind(this.userController)
-        )
-
-        this.router.get(
-            '/get-leader-board',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
-            this.userController.getLeaderBoard.bind(this.userController)
         )
     }
 }

@@ -31,10 +31,6 @@ export class Config {
     @IsNotEmpty()
     port: number
 
-    @IsNumber()
-    @IsNotEmpty()
-    socketPort: number
-
     @ValidateNested()
     @Type(() => MongoDbConfig)
     masterDb: MongoDbConfig
@@ -74,65 +70,12 @@ export class Config {
     @IsNotEmpty()
     expireNonce: number
 
-    @IsString()
-    @IsNotEmpty()
-    shareSecret: string
-
-    @IsString()
-    @IsNotEmpty()
-    domain: string
-
-    @IsNumber()
-    @IsNotEmpty()
-    payloadTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    proofTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    energyTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    bootsTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    adsBombTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberBomb: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberLightning: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberMoneyShare: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberMoneyEarn: number
-
-    @IsString()
-    @IsNotEmpty()
-    providerPaymentId: string
-
-    @IsString()
-    @IsNotEmpty()
-    rpcUrl: string
-
     constructor() {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
         this.appEnv = env.APP_ENV
         this.runEnv = env.RUN_ENV
         this.port = parseInt(env.PORT)
-        this.socketPort = parseInt(env.SOCKET_PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
         this.redis = this.decodeStringObj(env.REDIS)
         this.bot = this.decodeStringObj(env.BOT)
@@ -143,19 +86,6 @@ export class Config {
         this.secretKey = env.SECRET_KEY
         this.ivKey = env.IV_KEY
         this.expireNonce = parseInt(env.EXPIRES_NONCE)
-        this.shareSecret = env.SHARED_SECRET
-        this.domain = env.DOMAIN
-        this.payloadTTL = parseInt(env.PAYLOAD_TTL)
-        this.proofTTL = parseInt(env.PROOF_TTL)
-        this.energyTTL = parseInt(env.ENERGY_TTL)
-        this.bootsTTL = parseInt(env.BOOTS_TTL)
-        this.numberBomb = parseInt(env.NUMBER_BOMB)
-        this.numberLightning = parseInt(env.NUMBER_LIGHTNING)
-        this.numberMoneyShare = parseInt(env.NUMBER_MONEY_SHARE)
-        this.numberMoneyEarn = parseInt(env.NUMBER_MONEY_EARN)
-        this.adsBombTTL = parseInt(env.ADS_BOMB_TTL)
-        this.providerPaymentId = env.PROVIDER_PAYMENT_ID
-        this.rpcUrl = env.RPC_URL
     }
 
     isProductionNodeEnv() {
