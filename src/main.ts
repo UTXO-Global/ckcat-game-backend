@@ -5,6 +5,7 @@ import { HealthRoute } from './modules/health/health.route'
 import { UserRoute } from './modules/user/user.route'
 import { WalletRoute } from './modules/wallet/wallet.route'
 import { GameRoute } from './modules/game/game.route'
+import { TransactionRoute } from './modules/transaction/transaction.route'
 
 const app = new App(config, [
     {
@@ -16,9 +17,9 @@ const app = new App(config, [
             UserRoute,
             WalletRoute,
             GameRoute,
+            TransactionRoute,
         ],
     },
 ])
 app.start()
 
-// new Socket(config)
