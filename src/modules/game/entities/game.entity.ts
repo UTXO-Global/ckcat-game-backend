@@ -44,6 +44,16 @@ export class Game extends AppBaseEntity {
                 })
             )
         }
+
+        if (data.data !== res.data) {
+            await manager.update(Game, { userId: userId }, { data: data.data })
+            return await Game.findOne({
+                where: {
+                    userId: userId,
+                },
+            })
+        }
+        
         return res;
     }
 
