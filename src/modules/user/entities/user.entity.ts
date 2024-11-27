@@ -14,7 +14,6 @@ import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { ResponseWrapper } from '../../../utils/response'
 import Container from 'typedi'
-import { CacheKeys, CacheManager, CacheTimes } from '../../../caches'
 import { LeaderBoardDTO } from '../dtos/leader-board.dto'
 
 @Entity()
@@ -55,27 +54,10 @@ export class User extends AppBaseEntity {
                 ...createFields,
             })
         )
-        if (createFields) {
-            const cacheManager = Container.get(CacheManager)
-            const catchUser = plainToInstance(UserDTO, user, {
-                excludeExtraneousValues: true,
-            })
-            await cacheManager.setObject(
-                CacheKeys.user(catchUser.id),
-                catchUser,
-                CacheTimes.day(30)
-            )
-            await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
-        }
         return user
     }
 
     static async getUser(id: string) {
-        const cacheManager = Container.get(CacheManager)
-        const cachedUser = await cacheManager.getObject<UserDTO>(
-            CacheKeys.user(id)
-        )
-        if (cachedUser) return cachedUser
 
         const res = await User.findOne({
             where: {
@@ -87,11 +69,6 @@ export class User extends AppBaseEntity {
             const user = plainToInstance(UserDTO, res, {
                 excludeExtraneousValues: true,
             })
-            await cacheManager.setObject(
-                CacheKeys.user(id),
-                user,
-                CacheTimes.day(30)
-            )
             return user
         }
     }

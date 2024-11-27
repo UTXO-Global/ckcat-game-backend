@@ -1,5 +1,4 @@
 import { Inject, Service } from 'typedi'
-import { CacheKeys, CacheManager } from '../../caches'
 import { startTransaction } from '../../database/connection'
 import { User } from './entities/user.entity'
 import { UserDTO } from './dtos/user.dto'
@@ -7,7 +6,6 @@ import { plainToInstance } from 'class-transformer'
 import { CoinReqDTO } from './dtos/coin.dto'
 import { Config } from '../../configs'
 import { isWithinSeconds } from '../../utils'
-import { NonceService } from '../nonce/nonce.service'
 import crypto from 'crypto'
 import { Address, Cell } from '@ton/core'
 import { TonClient } from '@ton/ton'
@@ -20,9 +18,7 @@ import { AuthRequest } from '../auth/auth.middleware'
 @Service()
 export class UserService {
     constructor(
-        @Inject() private nonceService: NonceService,
         @Inject() private config: Config,
-        @Inject() private cacheManager: CacheManager
     ) {}
 
     

@@ -35,9 +35,9 @@ export class Config {
     @Type(() => MongoDbConfig)
     masterDb: MongoDbConfig
 
-    @ValidateNested()
-    @Type(() => RedisConfig)
-    redis: RedisConfig
+    @IsString()
+    @IsNotEmpty()
+    redisUri: string
 
     @ValidateNested()
     @Type(() => BotConfig)
@@ -77,7 +77,7 @@ export class Config {
         this.runEnv = env.RUN_ENV
         this.port = parseInt(env.PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
-        this.redis = this.decodeStringObj(env.REDIS)
+        this.redisUri = env.REDIS_URI
         this.bot = this.decodeStringObj(env.BOT)
         this.jwt = this.decodeStringObj(env.JWT)
         this.telegramTokenBot = env.TELEGRAM_BOT_TOKEN

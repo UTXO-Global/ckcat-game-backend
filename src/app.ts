@@ -15,10 +15,15 @@ import 'reflect-metadata'
 import Container from 'typedi'
 import { Config, validateEnv } from './configs'
 import { AppDataSource } from './database/connection'
-import { QueueManager, setupQueues } from './queues/queues'
-import { setupCrons, setupWorkers } from './queues/workers'
 import { handleError } from './utils/error'
 import { logger } from './utils/logger'
+import { serverAdapter } from './modules/queue/queue.service'
+
+import {
+    transactionCrawlService,
+} from './services'
+
+import { redisService } from './modules/redis/redis.service'
 
 export interface BaseRoute {
     route?: string
@@ -34,12 +39,12 @@ export interface AppRoute {
     routes?: ClassConstructor<BaseRoute>[]
 }
 
+
 export class App {
     private app = express()
     static admin = require('firebase-admin')
 
     constructor(private config: Config, routes: AppRoute[]) {
-        setupQueues()
         this.initMiddlewares()
         this.initRoutes(routes)
     }
@@ -92,16 +97,6 @@ export class App {
             })
         })
 
-        // queue dashboard
-        this.app.use(
-            '/admin/queues',
-            expressBasicAuth({
-                challenge: true,
-                users: { admin: this.config.basicAuthPassword },
-            }),
-            Container.get(QueueManager).createBoard().getRouter()
-        )
-
         // error handler
         this.app.use(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -112,12 +107,17 @@ export class App {
     }
 
     async start() {
+        await Promise.all([
+            redisService.connect(),
+            transactionCrawlService.addTransactionsCrawlToQueue(),
+        ])
+
         const start = Date.now()
 
         validateEnv(this.config)
         await Promise.all([AppDataSource.initialize()])
-        setupWorkers()
-        await setupCrons()
+
+        this.app.use('/admin/queues', serverAdapter.getRouter())
 
         this.app.listen(this.config.port, () => {
             return logger.info(
