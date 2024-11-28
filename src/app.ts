@@ -8,7 +8,6 @@ import express, {
     Router,
     urlencoded,
 } from 'express'
-import expressBasicAuth from 'express-basic-auth'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import 'reflect-metadata'
@@ -17,7 +16,6 @@ import { Config, validateEnv } from './configs'
 import { AppDataSource } from './database/connection'
 import { handleError } from './utils/error'
 import { logger } from './utils/logger'
-import { serverAdapter } from './modules/queue/queue.service'
 
 import {
     transactionCrawlService,
@@ -116,8 +114,6 @@ export class App {
 
         validateEnv(this.config)
         await Promise.all([AppDataSource.initialize()])
-
-        this.app.use('/admin/queues', serverAdapter.getRouter())
 
         this.app.listen(this.config.port, () => {
             return logger.info(

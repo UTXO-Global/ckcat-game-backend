@@ -77,7 +77,7 @@ export class Config {
         this.runEnv = env.RUN_ENV
         this.port = parseInt(env.PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
-        this.redisUri = env.REDIS_URI
+        this.redisUri = this.decodeObjToStringRedis(env.REDIS)
         this.bot = this.decodeStringObj(env.BOT)
         this.jwt = this.decodeStringObj(env.JWT)
         this.telegramTokenBot = env.TELEGRAM_BOT_TOKEN
@@ -98,6 +98,12 @@ export class Config {
 
     private decodeStringObj(str: string) {
         return JSON.parse(str.replace(/\\/g, ''))
+    }
+
+    private decodeObjToStringRedis(str: string) {
+        const json = this.decodeStringObj(str);
+        const { host, port } = json;
+        return `redis://${host}:${port}`;
     }
 }
 
