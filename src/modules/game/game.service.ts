@@ -1,5 +1,4 @@
-import { Inject, Service } from 'typedi'
-import { Config } from '../../configs'
+import { Service } from 'typedi'
 import { startTransaction } from '../../database/connection'
 import { GameDTO } from './dtos/game.dto'
 import { Game } from './entities/game.entity'

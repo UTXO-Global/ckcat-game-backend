@@ -12,6 +12,14 @@ export interface AuthRequest extends Request {
     user: UserDTO
 }
 
+export interface CKAuthRequest extends Request {
+    userId: string
+}
+
+export interface CKAuthRequest extends Request {
+    userId: string
+}
+
 @Service()
 export class AuthMiddleware {
     constructor(
@@ -19,9 +27,26 @@ export class AuthMiddleware {
         @Inject() private authService: AuthService
     ) {}
 
-    async authorizePurchase(initData: string) {
-        return await this.authService.verifyInitData(initData)
+    authorization = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const authHeader = req.headers['authorization']
+            const [, token] = authHeader && authHeader.split(' ')
+            if (token == null) {
+                return next(Errors.Unauthorized)
+            }
+            const payload = await this.authService.verifyToken(token)
+            req.userId = payload.userId
+            
+            next()
+        } catch (error) {
+            next(Errors.Unauthorized)
+        }
     }
+
 
     async authorizeTelegram(
         req: AuthRequest,
@@ -46,7 +71,7 @@ export class AuthMiddleware {
                 userObject['id'] = userObject.id.toString()
                 userObject['firstName'] = userObject.first_name
                 userObject['lastName'] = userObject.last_name
-                userObject['coin'] = 0
+                userObject['gems'] = 0
                 const user = plainToInstance(UserDTO, userObject, {
                     excludeExtraneousValues: true,
                 })
@@ -62,17 +87,7 @@ export class AuthMiddleware {
     }
 }
 
-const getAuthHeader = (req: Request) => {
-    const authHeader = req.headers['authorization']
-    return authHeader?.split(' ')[1]
-}
-
 const getAuthTelegramHeader = (req: Request) => {
     const authHeader = req.headers['authorization']
     return authHeader?.split(' ')[1]
-}
-
-const getAuthTelegramHeaderFromX = (req: Request) => {
-    const authHeader = req.headers['x-api-key'] as string
-    return authHeader
 }

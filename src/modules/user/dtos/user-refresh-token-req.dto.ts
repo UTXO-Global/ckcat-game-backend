@@ -1,10 +1,7 @@
 import { Expose } from 'class-transformer'
 import { BaseReqDTO } from '../../../base/base.dto'
 
-export class GetStarTransactionReqDTO extends BaseReqDTO {
+export class UserRefreshTokenReqDTO extends BaseReqDTO {
     @Expose()
-    offset: number
-
-    @Expose()
-    limit: number
+    refreshToken: string
 }

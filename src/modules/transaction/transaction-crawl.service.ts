@@ -1,8 +1,5 @@
-import axios from 'axios'
 import { Queue, Worker } from 'bullmq'
-import { In } from 'typeorm'
 import { Config } from '../../configs'
-import { logger } from '../../helpers/logger'
 import {
     EventService,
 } from '../event/event.service'

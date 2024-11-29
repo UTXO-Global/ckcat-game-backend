@@ -5,7 +5,7 @@ import { TransactionDTO } from '../transaction/dtos/transaction.dto'
 import { TransactionService } from './transaction.service'
 import { DataRequest } from '../../base/base.request'
 import { TransactionDetailReqDTO } from './dtos/transaction-detail-req.dto'
-import { AuthRequest } from '../auth/auth.middleware'
+import { CKAuthRequest } from '../auth/auth.middleware'
 
 @Service()
 export class TransactionController {
@@ -18,10 +18,9 @@ export class TransactionController {
         res: Response,
         next: NextFunction
     ) => {
-        
         try {
             const params = req.body
-            params.userId = req.user.id
+            params.userId = req.userId
             const transaction = await this.transactionService.createTransaction(params)
             res.send(new ResponseWrapper(transaction))
         } catch (err) {
@@ -35,9 +34,9 @@ export class TransactionController {
         next: NextFunction
     ) => {
         try {
-            const { user } = req
+            const { userId } = req
             res.send(
-                new ResponseWrapper(await this.transactionService.getTransactionInfo(user.id, req.params.transactionId))
+                new ResponseWrapper(await this.transactionService.getTransactionInfo(userId, req.params.transactionId))
             )
         } catch (err) {
             next(err)
@@ -45,15 +44,14 @@ export class TransactionController {
     }
 
     getTransactions = async (
-        req: AuthRequest,
+        req: CKAuthRequest,
         res: Response,
         next: NextFunction
     ) => {
         try {
-            const { user } = req
-            
+            const { userId } = req
             res.send(
-                new ResponseWrapper(await this.transactionService.getTransactions(user.id))
+                new ResponseWrapper(await this.transactionService.getTransactions(userId))
             )
         } catch (err) {
             next(err)
