@@ -13,6 +13,17 @@ export const CacheKeys = {
     user: (userId: string) => `user:${userId}`,
     aiBullets: `ai-bullets`,
     deduction: (meetingId: string) => `deduction:${meetingId}`,
+    gameQuestTask: (userId: string) => `gameQuestTask:${userId}`,
+}
+
+export const CacheTimes = {
+    day: (time = 1) => {
+        return time * CacheTimes.hour(24)
+    },
+    hour: (time = 1) => {
+        return time * CacheTimes.minute(60)
+    },
+    minute: (time = 1) => time * 60,
 }
 
 @Service()
@@ -38,11 +49,16 @@ export class CacheManager {
         }
     }
 
-    async getObject<T>(cls: ClassConstructor<T>, key: string): Promise<T> {
+    // async getObject<T>(cls: ClassConstructor<T>, key: string): Promise<T> {
+    //     const res = await this.get(key)
+    //     return plainToInstance(cls, JSON.parse(res), {
+    //         excludeExtraneousValues: true,
+    //     })
+    // }
+
+    async getObject<T>(key: string): Promise<T> {
         const res = await this.get(key)
-        return plainToInstance(cls, JSON.parse(res), {
-            excludeExtraneousValues: true,
-        })
+        return JSON.parse(res)
     }
 
     async setObject(key: string, object: unknown, ttl?: number) {

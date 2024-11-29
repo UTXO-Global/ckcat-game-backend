@@ -82,6 +82,7 @@ export const Errors = {
         'error.TransactionHashNotExisted',
         'Transaction Hash Not Existed'
     ),
+    QuestNotFound: new ErrorResp('error.questNotFound', 'Quest Not Found'),
 }
 
 export const handleError = (err: Error, res: Response) => {
