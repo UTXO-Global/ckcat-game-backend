@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { differenceInSeconds } from 'date-fns'
 import { Message } from 'telegraf/typings/core/types/typegram'
 
@@ -229,4 +230,8 @@ export const extractWalletId = (url: string): string | null => {
         return tokenParam[1]
     }
     return null
+}
+
+export const randomID = () => {
+    return randomUUID().replace(/-/g, '')
 }

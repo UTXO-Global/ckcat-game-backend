@@ -82,6 +82,20 @@ export const Errors = {
         'error.TransactionHashNotExisted',
         'Transaction Hash Not Existed'
     ),
+    AirdropNotFound: new ErrorResp(
+        'error.airdropNotFound',
+        'Airdrop Not Found'
+    ),
+    AirdropClosed: new ErrorResp('error.airdropClosed', 'Airdrop Closed'),
+    WallletUserNotFound: new ErrorResp(
+        'error.walletUserNotFound',
+        'Wallet User Not Found'
+    ),
+    MaxParticipationReached: new ErrorResp(
+        'error.maxParticipationReached',
+        'Max Participation Reached'
+    ),
+    NotEnoughGems: new ErrorResp('error.notEnoughGems', 'Not enough gems'),
 }
 
 export const handleError = (err: Error, res: Response) => {
