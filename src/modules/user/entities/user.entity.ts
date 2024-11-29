@@ -2,9 +2,7 @@ import {
     Column,
     Entity,
     EntityManager,
-    Index,
     ObjectIdColumn,
-    PrimaryGeneratedColumn,
 } from 'typeorm'
 import { ObjectId } from 'bson'
 import { AppBaseEntity } from '../../../base/base.entity'
@@ -12,9 +10,6 @@ import { AppDataSource } from '../../../database/connection'
 import { UserDTO } from '../dtos/user.dto'
 import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
-import { ResponseWrapper } from '../../../utils/response'
-import Container from 'typedi'
-import { LeaderBoardDTO } from '../dtos/leader-board.dto'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -34,11 +29,7 @@ export class User extends AppBaseEntity {
     username: string
 
     @Column()
-    coin: number
-
-    @Index()
-    @Column({ length: 6 })
-    salt: string
+    gems: number
 
     static async createUser(
         data: UserDTO,

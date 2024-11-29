@@ -15,5 +15,5 @@ export class UserDTO extends BaseDTO {
     username: string
 
     @Expose()
-    coin: number
+    gems: number
 }

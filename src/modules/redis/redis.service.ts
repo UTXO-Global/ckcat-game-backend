@@ -2,7 +2,9 @@ import IORedis from 'ioredis'
 import { createClient, RedisClientType } from 'redis'
 import { Config, config } from '../../configs'
 import { logger } from '../../helpers/logger'
+import { Service } from 'typedi'
 
+@Service()
 export class RedisService {
     conf: Config
     client: RedisClientType

@@ -4,7 +4,7 @@ import { ResponseWrapper } from '../../utils/response'
 import { GameDTO } from '../game/dtos/game.dto'
 import { GameService } from './game.service'
 import { DataRequest } from '../../base/base.request'
-import { AuthRequest } from '../auth/auth.middleware'
+import { CKAuthRequest } from '../auth/auth.middleware'
 
 @Service()
 export class GameController {
@@ -19,7 +19,7 @@ export class GameController {
     ) => {
         try {
             const params = req.body
-            params.userId = req.user.id
+            params.userId = req.userId
             const game = await this.gameService.createGame(params)
             res.send(new ResponseWrapper(game))
         } catch (err) {
@@ -28,14 +28,14 @@ export class GameController {
     }
 
     getGameInfo = async (
-        req: AuthRequest,
+        req: CKAuthRequest,
         res: Response,
         next: NextFunction
     ) => {
         try {
-            const { user } = req
+            const { userId } = req
             res.send(
-                new ResponseWrapper(await this.gameService.getGameInfo(user.id))
+                new ResponseWrapper(await this.gameService.getGameInfo(userId))
             )
         } catch (err) {
             next(err)

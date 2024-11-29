@@ -19,19 +19,19 @@ export class TransactionRoute implements BaseRoute {
     private initRoutes() {
         this.router.post(
             '/create-transaction',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.transactionController.createTransaction.bind(this.transactionController)
         )
 
         this.router.get(
             '/detail/:transactionId',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.transactionController.getTransactionInfo.bind(this.transactionController)
         )
 
         this.router.get(
             '/transactions',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.transactionController.getTransactions.bind(this.transactionController)
         )
     }

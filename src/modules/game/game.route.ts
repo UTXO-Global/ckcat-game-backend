@@ -21,12 +21,12 @@ export class GameRoute implements BaseRoute {
     private initRoutes() {
         this.router.post(
             '/create-game',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.createGame.bind(this.gameController)
         )
         this.router.get(
             '/game-info',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.getGameInfo.bind(this.gameController)
         )
     }
