@@ -10,6 +10,7 @@ import { AppDataSource } from '../../../database/connection'
 import { UserDTO } from '../dtos/user.dto'
 import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
+import { GemsDTO } from '../../gems/dtos/gems.dto'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -62,6 +63,14 @@ export class User extends AppBaseEntity {
             })
             return user
         }
+    }
+
+    static async updateGems(
+        data: GemsDTO,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        const user = await User.getUser(data.userId);
+        await manager.update(User, { id: data.userId }, { gems: user.gems + data.gems })
     }
 
 
