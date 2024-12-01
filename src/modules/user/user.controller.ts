@@ -60,4 +60,19 @@ export class UserController {
         }
     }
 
+    getProfile = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const { userId } = req
+            res.send(
+                new ResponseWrapper(await this.userService.getProfile(userId))
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
 }
