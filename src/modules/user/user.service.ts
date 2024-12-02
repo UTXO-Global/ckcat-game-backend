@@ -51,4 +51,8 @@ export class UserService {
         )
         await this.cacheManager.del(CacheKeys.accessToken(userId, token))
     }
+
+    async getProfile(userId: string) {
+        return await User.getUser(userId)
+    }
 }

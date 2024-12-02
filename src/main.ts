@@ -7,6 +7,7 @@ import { WalletRoute } from './modules/wallet/wallet.route'
 import { GameRoute } from './modules/game/game.route'
 import { TransactionRoute } from './modules/transaction/transaction.route'
 import { GameAirdropRoute } from './modules/game-airdrop/game-airdrop.route'
+import { GemsRoute } from './modules/gems/gems.route'
 
 const app = new App(config, [
     {
@@ -20,6 +21,7 @@ const app = new App(config, [
             GameRoute,
             TransactionRoute,
             GameAirdropRoute,
+            GemsRoute,
         ],
     },
 ])
