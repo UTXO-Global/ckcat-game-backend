@@ -9,8 +9,8 @@ export class ResponseWrapper {
 
     constructor(
         data: any,
-        pagination: Pagination = null,
-        error: ErrorResp = null
+        error: ErrorResp = null,
+        pagination: Pagination = null
     ) {
         this.data = data
         this.error = error
