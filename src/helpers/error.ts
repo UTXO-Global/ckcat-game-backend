@@ -25,6 +25,11 @@ export const Errors = {
     BadRequest: new ErrorResp('error.badRequest', 'Bad request', 400),
     Unauthorized: new ErrorResp('error.unauthorized', 'Unauthorized', 401),
     Forbidden: new ErrorResp('error.forbiden', 'Forbidden', 403),
+    LimitInvalid: new ErrorResp(
+        'error.LimitInvalid',
+        'Limit invalid (maximum is 100)',
+        400
+    ),
     Sensitive: new ErrorResp(
         'error.sensitive',
         'An error occurred, please try again later.',

@@ -16,10 +16,6 @@ export interface CKAuthRequest extends Request {
     userId: string
 }
 
-export interface CKAuthRequest extends Request {
-    userId: string
-}
-
 @Service()
 export class AuthMiddleware {
     constructor(

@@ -1,6 +1,6 @@
 import { Expose, plainToInstance } from 'class-transformer'
 import { Response } from 'express'
-import { config } from '../configs'
+import { logger } from './logger'
 import { ResponseWrapper } from './response'
 
 export class ErrorResp extends Error {
@@ -40,48 +40,39 @@ export const Errors = {
         'error.invalidFileType',
         'Invalid file type.'
     ),
-    InvalidAccount: new ErrorResp('error.invalidAccount', 'Invalid account'),
-    InvalidDeviceId: new ErrorResp(
-        'error.invalidDeviceId',
-        'Invalid device id'
-    ),
     UserNotFound: new ErrorResp('error.userNotFound', 'User not found'),
-    EmailNotFound: new ErrorResp('error.emailNotFound', 'Email not found'),
-    EmailExisted: new ErrorResp('error.emailExisted', 'Email existed'),
+    MeetingsEmpty: new ErrorResp('error.meetingsEmpty', 'Meetings empty'),
+    RacesEmpty: new ErrorResp('error.racesEmpty', 'Races empty'),
+    AccountIsNotActive: new ErrorResp(
+        'error.accountIsNotActive',
+        'Account is not active.'
+    ),
+    RaceIsEmpty: new ErrorResp('error.raceIsEmpty', 'Race is empty.'),
+    RunnerIsEmpty: new ErrorResp('error.runnerIsEmpty', 'Runner is empty.'),
+    InvalidRole: new ErrorResp('error.invalidRole', 'Invalid role.'),
+    MeetingNotFound: new ErrorResp(
+        'error.meetingNotFound',
+        'Meeting not found'
+    ),
+    GetResultByMeetingsFailed: new ErrorResp(
+        'error.getResultByMeetingsFailed',
+        'Get result by meetings failed.'
+    ),
+    MeetingIsNotEmpty: new ErrorResp(
+        'error.meetingIsNotEmpty',
+        'Meeting is not empty.'
+    ),
+    FromDateIsNotEmpty: new ErrorResp(
+        'error.fromDateIsNotEmpty',
+        'From date is not empty.'
+    ),
+    MaxRecursive: new ErrorResp('error.maxRecursive', 'Max recursive.'),
+    DeductionNotFound: new ErrorResp(
+        'error.deductionNotFound',
+        'Deduction Not Found.'
+    ),
     UserIdExisted: new ErrorResp('error.userIdExisted', 'User id existed'),
-    InvalidBuy: new ErrorResp('error.buy', 'Invalid buys'),
-    NotEnoughMoney: new ErrorResp('error.notEnoughMoney', 'Not enough money'),
-    Cheating: new ErrorResp('error.cheating', 'User try to cheating'),
-    NotEnoughEnergy: new ErrorResp(
-        'error.notEnoughEnergy',
-        'Not enough energy'
-    ),
-    NotEnoughSkill: new ErrorResp('error.notEnoughSkill', 'Not enough skill'),
-    HaveAlreadyRC: new ErrorResp(
-        'error.haveAlreadyRC',
-        'Have Already Referral Code'
-    ),
-    ReferralCodeNotFound: new ErrorResp(
-        'error.referralCodeNotFound',
-        'Referral Code Not Found'
-    ),
-    WrongReferralCode: new ErrorResp(
-        'error.wrongReferralCode',
-        'Wrong Referral Code'
-    ),
-    NotEnoughCoin: new ErrorResp('error.notEnoughCoin', 'Not enough coin'),
-    WaitingPrediction: new ErrorResp(
-        'error.waitingPrediction',
-        'Waiting prediction'
-    ),
-    TransactionHashExisted: new ErrorResp(
-        'error.transactionHashExisted',
-        'Transaction Hash Existed'
-    ),
-    TransactionHashNotExisted: new ErrorResp(
-        'error.TransactionHashNotExisted',
-        'Transaction Hash Not Existed'
-    ),
+    InvalidAccount: new ErrorResp('error.invalidAccount', 'Invalid account'),
 }
 
 export const handleError = (err: Error, res: Response) => {
@@ -90,27 +81,12 @@ export const handleError = (err: Error, res: Response) => {
         res.status(errResp.status || Errors.BadRequest.status).send(
             new ResponseWrapper(
                 null,
-                null,
                 plainToInstance(ErrorResp, errResp, {
                     excludeExtraneousValues: true,
                 })
             )
         )
     } else {
-        console.log(err)
-        if (config.isProductionAppEnv()) {
-            res.status(Errors.Sensitive.status).send(
-                new ResponseWrapper(null, null, Errors.Sensitive)
-            )
-            return
-        }
-        const errResp = new ErrorResp(
-            Errors.InternalServerError.code,
-            JSON.stringify(err),
-            Errors.InternalServerError.status
-        )
-        res.status(Errors.Sensitive.status).send(
-            new ResponseWrapper(null, null, errResp)
-        )
+        logger.error(JSON.stringify(err))
     }
 }
