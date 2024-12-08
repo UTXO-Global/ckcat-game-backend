@@ -41,6 +41,7 @@
         "@aws-sdk/client-s3": "^3.328.0",
         "@aws-sdk/s3-request-presigner": "3.328.0",
         "@bull-board/express": "^5.1.2",
+        "@ckb-lumos/lumos": "^0.23.0",
         "@ton/core": "^0.56.3",
         "@ton/crypto": "^3.2.0",
         "@ton/ton": "^13.11.1",

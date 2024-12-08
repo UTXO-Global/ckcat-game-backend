@@ -17,11 +17,6 @@ export class TransactionRoute implements BaseRoute {
     }
 
     private initRoutes() {
-        this.router.post(
-            '/create-transaction',
-            this.authMiddleware.authorization.bind(this.authMiddleware),
-            this.transactionController.createTransaction.bind(this.transactionController)
-        )
 
         this.router.get(
             '/detail/:transactionId',
