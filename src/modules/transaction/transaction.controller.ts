@@ -13,21 +13,6 @@ export class TransactionController {
         @Inject() public transactionService: TransactionService
     ) {}
 
-    createTransaction = async (
-        req: DataRequest<TransactionDTO>,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const params = req.body
-            params.userId = req.userId
-            const transaction = await this.transactionService.createTransaction(params)
-            res.send(new ResponseWrapper(transaction))
-        } catch (err) {
-            next(err)
-        }
-    }
-
     getTransactionInfo = async (
         req: DataRequest<TransactionDetailReqDTO>,
         res: Response,

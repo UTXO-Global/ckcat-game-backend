@@ -20,7 +20,10 @@ export class Transaction extends AppBaseEntity {
     userId: string
 
     @Column()
-    package: string
+    orderId: string
+
+    @Column()
+    txHash: string
     
     @Column()
     price: number
@@ -28,7 +31,7 @@ export class Transaction extends AppBaseEntity {
     @Column()
     status: string
 
-    static async createTransaction(
+    static async saveTransaction(
         data: TransactionDTO,
         manager: EntityManager = AppDataSource.manager
     ) {
@@ -36,11 +39,16 @@ export class Transaction extends AppBaseEntity {
             excludeExtraneousValues: true,
         })
 
-        return await manager.save(
-            Transaction.create({
-                ...createFields,
-            })
-        )
+        const transaction = await this.getTransactionByTXHash(data.txHash);
+        if (!transaction) {
+            return await manager.save(
+                Transaction.create({
+                    ...createFields,
+                })
+            )
+        }
+
+        return await manager.update(Transaction, { _id: transaction._id }, { status: data.status })
         
     }
 
@@ -53,6 +61,23 @@ export class Transaction extends AppBaseEntity {
             },
         })
     }
+
+    static async getTransactionById(transactionId: string) {
+        const id = new ObjectId(transactionId);
+        return await Transaction.findOne({
+            where: {
+                _id: id,
+            },
+        })
+    }
+
+    static async getTransactionByTXHash(txHash: string) {
+        return await Transaction.findOne({
+            where: {
+                txHash: txHash,
+            },
+        })
+    }
     
     static async getTransactions(userId: string) {
         return await Transaction.find({
@@ -60,5 +85,13 @@ export class Transaction extends AppBaseEntity {
                 userId: userId,
             },
         })
+    }
+
+    static async updateStatusTransaction(
+        transactionId: string,
+        status: string,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        await manager.update(Transaction, { _id: transactionId }, { status })
     }
 }

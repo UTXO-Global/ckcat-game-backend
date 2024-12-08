@@ -70,6 +70,14 @@ export class Config {
     @IsNotEmpty()
     expireNonce: number
 
+    @IsString()
+    @IsNotEmpty()
+    ckAddress: string
+
+    @IsString()
+    @IsNotEmpty()
+    ckbURL: string
+
     constructor() {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
@@ -86,6 +94,8 @@ export class Config {
         this.secretKey = env.SECRET_KEY
         this.ivKey = env.IV_KEY
         this.expireNonce = parseInt(env.EXPIRES_NONCE)
+        this.ckAddress = env.CK_ADDRESS
+        this.ckbURL = env.CKB_URL
     }
 
     isProductionNodeEnv() {
