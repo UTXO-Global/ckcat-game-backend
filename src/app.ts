@@ -16,6 +16,8 @@ import { Config, validateEnv } from './configs'
 import { AppDataSource } from './database/connection'
 import { handleError } from './utils/error'
 import { logger } from './utils/logger'
+import expressBasicAuth from 'express-basic-auth'
+import { serverAdapter } from './modules/queue/queue.service'
 
 import {
     transactionCrawlService,
@@ -70,7 +72,14 @@ export class App {
                 },
             })
         )
+
+        this.app.use('/admin/queues', expressBasicAuth({
+            challenge: true,
+            users: { admin: this.config.basicAuthPassword },
+        }), serverAdapter.getRouter())
     }
+
+    
 
     private initRoutes(routes: AppRoute[]) {
         routes.forEach((route) => {
