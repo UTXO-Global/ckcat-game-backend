@@ -1,9 +1,4 @@
-import {
-    Column,
-    Entity,
-    EntityManager,
-    ObjectIdColumn,
-} from 'typeorm'
+import { Column, Entity, EntityManager, ObjectIdColumn } from 'typeorm'
 import { ObjectId } from 'bson'
 import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
@@ -11,6 +6,7 @@ import { UserDTO } from '../dtos/user.dto'
 import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { GemsDTO } from '../../gems/dtos/gems.dto'
+import { getNowUtc } from '../../../utils'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -32,6 +28,9 @@ export class User extends AppBaseEntity {
     @Column()
     gems: number
 
+    @Column()
+    unlockTraining: number
+
     static async createUser(
         data: UserDTO,
         manager: EntityManager = AppDataSource.manager
@@ -44,13 +43,13 @@ export class User extends AppBaseEntity {
         const user = await manager.save(
             User.create({
                 ...createFields,
+                unlockTraining: 0,
             })
         )
         return user
     }
 
     static async getUser(id: string) {
-
         const res = await User.findOne({
             where: {
                 id: id,
@@ -69,10 +68,13 @@ export class User extends AppBaseEntity {
         data: GemsDTO,
         manager: EntityManager = AppDataSource.manager
     ) {
-        const user = await User.getUser(data.userId);
-        await manager.update(User, { id: data.userId }, { gems: user.gems + data.gems })
+        const user = await User.getUser(data.userId)
+        await manager.update(
+            User,
+            { id: data.userId },
+            { gems: user.gems + data.gems }
+        )
     }
-
 
     static async validateUserInfo(data: { id?: string }) {
         const { id } = data
@@ -89,5 +91,16 @@ export class User extends AppBaseEntity {
             throw Errors.UserIdExisted
         }
     }
-    
+
+    static async updateUser(
+        data: User | UserDTO,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        data.updatedAt = getNowUtc()
+        await manager.update(User, { id: data.id }, { ...data })
+        const user = plainToInstance(UserDTO, data, {
+            excludeExtraneousValues: true,
+        })
+        return user
+    }
 }

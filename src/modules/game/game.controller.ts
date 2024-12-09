@@ -8,9 +8,7 @@ import { CKAuthRequest } from '../auth/auth.middleware'
 
 @Service()
 export class GameController {
-    constructor(
-        @Inject() public gameService: GameService
-    ) {}
+    constructor(@Inject() public gameService: GameService) {}
 
     createGame = async (
         req: DataRequest<GameDTO>,
@@ -36,6 +34,23 @@ export class GameController {
             const { userId } = req
             res.send(
                 new ResponseWrapper(await this.gameService.getGameInfo(userId))
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    unlockTraining = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const { userId } = req
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.unlockTraining(userId)
+                )
             )
         } catch (err) {
             next(err)
