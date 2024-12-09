@@ -73,6 +73,15 @@ export const Errors = {
     ),
     UserIdExisted: new ErrorResp('error.userIdExisted', 'User id existed'),
     InvalidAccount: new ErrorResp('error.invalidAccount', 'Invalid account'),
+    CheckInAlready: new ErrorResp('error.checkInAlready', 'Check in already'),
+    CompletedRewardLogin: new ErrorResp(
+        'error.completedRewardLogin',
+        'You have already completed your daily login streak of 30 days.'
+    ),
+    CheckInRewardNotFound: new ErrorResp(
+        'error.checkInRewardNotFound',
+        'Check in reward not found'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
