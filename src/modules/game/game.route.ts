@@ -29,5 +29,9 @@ export class GameRoute implements BaseRoute {
             this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.getGameInfo.bind(this.gameController)
         )
+        this.router.get(
+            '/watch-video',
+            this.gameController.confirmWatchVideo.bind(this.gameController)
+        )
     }
 }
