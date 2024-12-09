@@ -133,6 +133,7 @@ export class TransactionsCrawlService {
                 
                 const transactionDetail = await this.getTransaction(transaction.out_point.tx_hash);
                 const outputsData = transactionDetail.transaction.outputs_data;
+                
                 let orderId = parseHexToString(outputsData[1]);
                 if (!ObjectId.isValid(orderId)) {
                     continue;
