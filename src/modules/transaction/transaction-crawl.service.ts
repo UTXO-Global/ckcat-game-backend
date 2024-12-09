@@ -74,7 +74,7 @@ export class TransactionsCrawlService {
             const result = await this.getCells();
             return allCells.concat(result.objects);
         } catch (error) {
-            throw new Error('Error fetching all cells recursively');
+            throw error;
         }
     }
     
