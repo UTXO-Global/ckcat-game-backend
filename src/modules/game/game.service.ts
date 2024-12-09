@@ -1,4 +1,3 @@
-import { GemsSetting } from './../gems/entities/gemsSetting.entity'
 import { Inject, Service } from 'typedi'
 import { startTransaction } from '../../database/connection'
 import { GameDTO } from './dtos/game.dto'
@@ -7,7 +6,6 @@ import { plainToInstance } from 'class-transformer'
 import { User } from '../user/entities/user.entity'
 import { Errors } from '../../utils/error'
 import { GemsService } from '../gems/gems.service'
-import { GemsSettingType } from '../gems/types/gems-setting.type'
 
 @Service()
 export class GameService {
@@ -30,13 +28,10 @@ export class GameService {
             const user = await manager.findOneBy(User, { id: userId })
             if (!user) throw Errors.UserNotFound
 
-            const setting = await GemsSetting.getSettingType(
-                GemsSettingType.WatchVideo
-            )
             await this.gemsService.gemsHistory({
                 userId,
-                type: GemsSettingType.WatchVideo,
-                gems: setting.gems,
+                type: 'watch-video',
+                gems: 50,
             })
 
             return true
