@@ -55,7 +55,7 @@ export class Order extends AppBaseEntity {
 
     static async getOrders(data: OrderListReqDTO) {
         const { pagination } = data
-        const res = await Order.find({
+        const [transactions, totalCount] = await Order.findAndCount({
             where: {
                 userId: data.userId,
             },
@@ -63,10 +63,31 @@ export class Order extends AppBaseEntity {
             take: pagination.limit,
         })
 
-        pagination.total = await Order.count();
+        console.log("totalCount::",totalCount);
+        
+
+        pagination.total = totalCount;
         return {
-            data: res,
+            data: transactions,
             pagination: pagination,
         }
+    }
+
+    static async getOrderById(orderId: string) {
+        const id = new ObjectId(orderId);
+        return await Order.findOne({
+            where: {
+                _id: id,
+            },
+        })
+    }
+
+    static async updateOrderStatus(
+        orderId: string,
+        status: string,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        const id = new ObjectId(orderId);
+        await manager.update(Order, { _id: id }, { status })
     }
 }
