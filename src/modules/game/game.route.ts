@@ -29,10 +29,17 @@ export class GameRoute implements BaseRoute {
             this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.getGameInfo.bind(this.gameController)
         )
+        //claim gems when watch video
         this.router.get(
             '/claim/watch-video',
             this.gameController.claimWatchVideo.bind(this.gameController)
         )
+        //claim gems when watch ads
+        this.router.get(
+            '/claim/watch-ads',
+            this.gameController.claimWatchAds.bind(this.gameController)
+        )
+        // unlock training cat
         this.router.post(
             '/unlock-training',
             this.authMiddleware.authorization.bind(this.authMiddleware),

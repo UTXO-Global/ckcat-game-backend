@@ -44,6 +44,24 @@ export class GameService {
         return true
     }
 
+    async claimWatchAds(userId: string) {
+        const user = await User.getUser(userId)
+        if (!user) throw Errors.UserNotFound
+
+        const setting = await EventSetting.getEventSettingByKey(
+            EventSettingKey.WatchAds
+        )
+        if (!setting) throw Errors.EventSettingNotFound
+
+        await this.gemsService.gemsHistory({
+            userId,
+            type: setting.eventSettingKey,
+            gems: setting.gems,
+        })
+
+        return true
+    }
+
     async unlockTraining(userId: string) {
         return await startTransaction(async (manager) => {
             const user = await User.getUser(userId)
