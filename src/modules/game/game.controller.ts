@@ -73,4 +73,21 @@ export class GameController {
             next(err)
         }
     }
+
+    unlockTraining = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const { userId } = req
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.unlockTraining(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
 }
