@@ -40,7 +40,7 @@ export class GameController {
         }
     }
 
-    confirmWatchVideo = async (
+    claimWatchVideo = async (
         req: CKAuthRequest,
         res: Response,
         next: NextFunction
@@ -49,7 +49,7 @@ export class GameController {
             const userId = req.query.userId as string
             res.send(
                 new ResponseWrapper(
-                    await this.gameService.confirmWatchVideo(userId)
+                    await this.gameService.claimWatchVideo(userId)
                 )
             )
         } catch (err) {

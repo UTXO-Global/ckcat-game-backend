@@ -30,8 +30,8 @@ export class GameRoute implements BaseRoute {
             this.gameController.getGameInfo.bind(this.gameController)
         )
         this.router.get(
-            '/watch-video',
-            this.gameController.confirmWatchVideo.bind(this.gameController)
+            '/claim/watch-video',
+            this.gameController.claimWatchVideo.bind(this.gameController)
         )
     }
 }
