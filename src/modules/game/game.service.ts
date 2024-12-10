@@ -27,7 +27,6 @@ export class GameService {
 
     async claimWatchVideo(userId: string) {
         const user = await User.getUser(userId)
-        console.log(user)
         if (!user) throw Errors.UserNotFound
 
         const setting = await EventSetting.getEventSettingByKey(
