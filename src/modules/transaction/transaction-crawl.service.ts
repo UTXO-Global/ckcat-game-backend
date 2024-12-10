@@ -51,9 +51,9 @@ export class TransactionsCrawlService {
                 "method": "get_cells",
                 "params": [{
                     "script": {
-                            "code_hash": this.config.ckCodeHash,
-                            "hash_type": this.config.ckHashType,
-                            "args": this.config.ckArgs
+                            "code_hash": "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                            "hash_type": "type",
+                            "args": "0xa600544bde5aa913b33a45b8f84dfe2227eded4c"
                         },
                     "script_type": "lock"
                   }, "desc", "0x3e8"]
