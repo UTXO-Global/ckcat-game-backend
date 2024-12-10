@@ -56,4 +56,21 @@ export class GameController {
             next(err)
         }
     }
+
+    claimWatchAds = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const userId = req.query.userId as string
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.claimWatchAds(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
 }

@@ -33,5 +33,9 @@ export class GameRoute implements BaseRoute {
             '/claim/watch-video',
             this.gameController.claimWatchVideo.bind(this.gameController)
         )
+        this.router.get(
+            '/claim/watch-ads',
+            this.gameController.claimWatchAds.bind(this.gameController)
+        )
     }
 }
