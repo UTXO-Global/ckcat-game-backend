@@ -82,6 +82,10 @@ export const Errors = {
         'error.checkInRewardNotFound',
         'Check in reward not found'
     ),
+    EventSettingNotFound: new ErrorResp(
+        'error.eventSettingNotFound',
+        'Event Setting Not Found'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {

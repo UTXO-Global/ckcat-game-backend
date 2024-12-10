@@ -10,6 +10,7 @@ import { GemsRoute } from './modules/gems/gems.route'
 import { PackageRoute } from './modules/package/package.route'
 import { OrderRoute } from './modules/order/order.route'
 import { CheckInRoute } from './modules/check-in/check-in.route'
+import { EventSettingRoute } from './modules/event-setting/event-setting.route'
 
 const app = new App(config, [
     {
@@ -26,6 +27,7 @@ const app = new App(config, [
             PackageRoute,
             OrderRoute,
             CheckInRoute,
+            EventSettingRoute,
         ],
     },
 ])

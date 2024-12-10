@@ -1,5 +1,4 @@
 import { Inject, Service } from 'typedi'
-import { CheckInRepos } from './repos/check-in.repos'
 import { CheckIn } from './entities/check-in.entity'
 import { EntityManager } from 'typeorm'
 import { CheckInReward } from './entities/check-in-reward.entity'
@@ -14,7 +13,7 @@ export class CheckInService {
 
     async checkIn(userId: string) {
         return await startTransaction(async (manager) => {
-            const checkIn = await CheckInRepos.checkIn(userId)
+            const checkIn = await CheckIn.checkIn(userId)
             await this.claimCheckInReward(checkIn, manager)
             return checkIn
         })
@@ -24,25 +23,29 @@ export class CheckInService {
         const { checkInId, currentStreak, userId } = checkIn
 
         // get rewards by streak
-        const rewards = await manager.findOne(CheckInReward, {
-            where: { dayStreak: currentStreak },
-        })
+        const rewards = await CheckInReward.getReward(currentStreak)
         if (!rewards) {
             throw Errors.CheckInRewardNotFound
         }
 
         const { rewardCode, rewardValue } = rewards
 
-        const claimReward = new CheckInClaimReward()
-        claimReward.checkInId = checkInId
-        claimReward.rewardCode = rewardCode
-        claimReward.rewardValue = rewardValue
+        await CheckInClaimReward.createCheckInClaimReward(
+            {
+                checkInId,
+                rewardCode,
+                rewardValue,
+            },
+            manager
+        )
 
-        await manager.save(CheckInClaimReward, claimReward)
-        await this.gemsService.gemsHistory({
-            userId,
-            type: 'check-in',
-            gems: rewardValue,
-        })
+        const eligibleStreaks = [5, 10, 15, 25, 30]
+        if (eligibleStreaks.includes(currentStreak)) {
+            await this.gemsService.gemsHistory({
+                userId,
+                type: 'check-in',
+                gems: rewardValue,
+            })
+        }
     }
 }

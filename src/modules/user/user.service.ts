@@ -48,21 +48,11 @@ export class UserService {
 
     async getProfile(userId: string) {
         const user = await User.getUser(userId)
-        const now = getNowUtc()
-        const currentDate = new Date(now)
-        currentDate.setUTCHours(0, 0, 0, 0)
-
-        const existedCheckIn = await CheckIn.findOne({
-            where: {
-                userId,
-                checkInDate: currentDate,
-            },
-        })
+        const existedCheckIn = await CheckIn.getLastCheckIn(userId)
         let isCheckIn = false
         if (existedCheckIn) {
             isCheckIn = true
         }
-
         return {
             user,
             isCheckIn,
