@@ -9,9 +9,6 @@ import {
 } from '../queue/crawl-transactions-queue.service'
 import { redisService } from '../redis/redis.service'
 import axios from 'axios'
-import { config } from '../../configs'
-import { helpers } from "@ckb-lumos/lumos";
-import { AGGRON4, LINA } from '../networks'
 import { Transaction } from './entities/transaction.entity'
 import { Order } from '../order/entities/order.entity'
 import { parseHexToString, parsePrice } from '../../utils'
@@ -47,26 +44,25 @@ export class TransactionsCrawlService {
 
     getCells = async () => {
         const url = this.config.ckbURL;
-        const lumosConfig = config.isProductionNodeEnv() ? LINA  : AGGRON4;
-
-        const toScript = helpers.parseAddress(this.config.ckAddress, {
-            config: lumosConfig,
-        });
-
-        let res = await axios.post(url, {
-            "id": 2,
-            "jsonrpc": "2.0",
-            "method": "get_cells",
-            "params": [{
-                "script": {
-                        "code_hash": toScript.codeHash,
-                        "hash_type": toScript.hashType,
-                        "args": toScript.args
-                    },
-                "script_type": "lock"
-              }, "desc", "0x3e8"]
-        })
-        return res.data.result;
+        try {
+            let res = await axios.post(url, {
+                "id": 2,
+                "jsonrpc": "2.0",
+                "method": "get_cells",
+                "params": [{
+                    "script": {
+                            "code_hash": "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+                            "hash_type": "type",
+                            "args": "0xa600544bde5aa913b33a45b8f84dfe2227eded4c"
+                        },
+                    "script_type": "lock"
+                  }, "desc", "0x3e8"]
+            })
+            return res.data.result;
+        } catch (error) {
+            throw error;
+        }
+        
     }
 
     getAllCells = async ( allCells = []) => {
