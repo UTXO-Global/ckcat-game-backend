@@ -1,6 +1,4 @@
 import { Service } from 'typedi'
-import { startTransaction } from '../../database/connection'
-import { TransactionDTO } from './dtos/transaction.dto'
 import { Transaction } from './entities/transaction.entity'
 
 @Service()

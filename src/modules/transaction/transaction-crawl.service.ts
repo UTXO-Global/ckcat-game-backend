@@ -9,9 +9,6 @@ import {
 } from '../queue/crawl-transactions-queue.service'
 import { redisService } from '../redis/redis.service'
 import axios from 'axios'
-import { config } from '../../configs'
-import { helpers } from "@ckb-lumos/lumos";
-import { AGGRON4, LINA } from '../networks'
 import { Transaction } from './entities/transaction.entity'
 import { Order } from '../order/entities/order.entity'
 import { parseHexToString, parsePrice } from '../../utils'
@@ -19,7 +16,6 @@ import { Package } from '../package/entities/package.entity'
 import { startTransaction } from '../../database/connection'
 import { ObjectId } from 'mongodb';
 
-let firstCall = 0;
 export class TransactionsCrawlService {
     config: Config
     eventService: EventService
@@ -37,7 +33,6 @@ export class TransactionsCrawlService {
     }
 
     initTransactionsCrawlWorker = () => {
-        firstCall = 0;
         new Worker(
             TransactionsCrawlQueueName,
             async () => {
@@ -47,66 +42,41 @@ export class TransactionsCrawlService {
         )
     }
 
-    getCells = async (cursor = '0x', limit = '0x64') => {
+    getCells = async () => {
         const url = this.config.ckbURL;
-        const lumosConfig = config.isProductionNodeEnv() ? LINA  : AGGRON4;
-
-        const toScript = helpers.parseAddress(this.config.ckAddress, {
-            config: lumosConfig,
-        });
-
-        if (firstCall === 0) {
+        try {
             let res = await axios.post(url, {
                 "id": 2,
                 "jsonrpc": "2.0",
                 "method": "get_cells",
                 "params": [{
                     "script": {
-                            "code_hash": toScript.codeHash,
-                            "hash_type": toScript.hashType,
-                            "args": toScript.args
+                            "code_hash": this.config.ckCodeHash,
+                            "hash_type": this.config.ckHashType,
+                            "args": this.config.ckArgs
                         },
                     "script_type": "lock"
-                  }, "desc", limit]
-            })
-            firstCall++;
-            return res.data.result;
-        } else {
-            let res = await axios.post(url, {
-                "id": 2,
-                "jsonrpc": "2.0",
-                "method": "get_cells",
-                "params": [{
-                    "script": {
-                            "code_hash": toScript.codeHash,
-                            "hash_type": toScript.hashType,
-                            "args": toScript.args
-                        },
-                    "script_type": "lock"
-                  }, "desc", limit, cursor]
+                  }, "desc", "0x3e8"]
             })
             return res.data.result;
+        } catch (error) {
+            throw error;
         }
+        
     }
 
-    getAllCells = async (cursor = '0x', limit = '0x64', allCells = []) => {
+    getAllCells = async ( allCells = []) => {
         try {
-            const result = await this.getCells(cursor, limit);
-            allCells = allCells.concat(result.objects);
-            
-            if (result.last_cursor != '0x' || firstCall === 0) {
-                return await this.getAllCells(result.last_cursor, limit, allCells);
-            } else {
-                return allCells;
-            }
+            const result = await this.getCells();
+            return allCells.concat(result.objects);
         } catch (error) {
-            throw new Error('Error fetching all cells recursively');
+            throw error;
         }
     }
     
 
     getTransactions = async () => {
-        const data = await this.getAllCells('0x', '0x64');
+        const data = await this.getAllCells();
         return data.filter(item => item.output_data !== '0x');
     }
 
@@ -124,7 +94,6 @@ export class TransactionsCrawlService {
 
     transactionsCrawl = async () => {
         try {
-            firstCall = 0;
             const transactions = await this.getTransactions();
             
             if (!transactions.length) return
@@ -133,6 +102,7 @@ export class TransactionsCrawlService {
                 
                 const transactionDetail = await this.getTransaction(transaction.out_point.tx_hash);
                 const outputsData = transactionDetail.transaction.outputs_data;
+                
                 let orderId = parseHexToString(outputsData[1]);
                 if (!ObjectId.isValid(orderId)) {
                     continue;
