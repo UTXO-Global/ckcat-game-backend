@@ -38,4 +38,13 @@ export class Gems extends AppBaseEntity {
             })
         )
     }
+
+    static async getGemsByType(userId: string, type: string) {
+        return await Gems.findOne({
+            where: {
+                userId,
+                type,
+            },
+        })
+    }
 }
