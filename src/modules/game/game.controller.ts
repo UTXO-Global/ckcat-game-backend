@@ -40,6 +40,23 @@ export class GameController {
         }
     }
 
+    claimWatchVideo = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const userId = req.query.userId as string
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.claimWatchVideo(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
     unlockTraining = async (
         req: CKAuthRequest,
         res: Response,
