@@ -44,16 +44,22 @@ export class CheckIn extends AppBaseEntity {
         )
     }
 
+    static async getLastCheckIn(userId: string) {
+        const existedCheckIn = await CheckIn.findOne({
+            where: { userId },
+            order: { checkInDate: 'DESC' },
+        })
+        return existedCheckIn
+    }
+
     static async checkIn(userId: string) {
         const now = getNowUtc()
         const currentDate = new Date(now)
         currentDate.setUTCHours(0, 0, 0, 0)
 
         // Validate check-in
-        const checkInData = await CheckIn.findOne({
-            where: { userId },
-            order: { checkInDate: 'DESC' },
-        })
+        const checkInData = await this.getLastCheckIn(userId)
+
         if (checkInData) {
             const checkInDate = checkInData.checkInDate.setUTCHours(0, 0, 0, 0)
             if (checkInDate === currentDate.getTime()) {
@@ -76,18 +82,5 @@ export class CheckIn extends AppBaseEntity {
         })
 
         return newCheckIn
-    }
-
-    static async getLastCheckIn(userId: string) {
-        const now = getNowUtc()
-        const currentDate = new Date(now)
-        currentDate.setUTCHours(0, 0, 0, 0)
-        const existedCheckIn = await CheckIn.findOne({
-            where: {
-                userId,
-                checkInDate: currentDate,
-            },
-        })
-        return existedCheckIn
     }
 }

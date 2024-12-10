@@ -49,13 +49,18 @@ export class UserService {
     async getProfile(userId: string) {
         const user = await User.getUser(userId)
         const existedCheckIn = await CheckIn.getLastCheckIn(userId)
-        let isCheckIn = false
-        if (existedCheckIn) {
-            isCheckIn = true
-        }
+        const now = getNowUtc()
+        const currentDate = new Date(now).setUTCHours(0, 0, 0, 0)
+
+        const dailyReward = existedCheckIn ? existedCheckIn.currentStreak : 0
+        const checkInDate = existedCheckIn?.checkInDate.setUTCHours(0, 0, 0, 0)
+
+        const isCheckIn = checkInDate === currentDate
+
         return {
             user,
             isCheckIn,
+            dailyReward,
         }
     }
 }
