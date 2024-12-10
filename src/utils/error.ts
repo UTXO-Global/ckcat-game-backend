@@ -73,6 +73,10 @@ export const Errors = {
     ),
     UserIdExisted: new ErrorResp('error.userIdExisted', 'User id existed'),
     InvalidAccount: new ErrorResp('error.invalidAccount', 'Invalid account'),
+    EventSettingNotFound: new ErrorResp(
+        'error.eventSettingNotFound',
+        'Event Setting Not Found'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
