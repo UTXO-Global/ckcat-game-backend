@@ -26,21 +26,21 @@ export class GameService {
     }
 
     async claimWatchVideo(userId: string) {
-        return await startTransaction(async (manager) => {
-            const user = await manager.findOneBy(User, { id: userId })
-            if (!user) throw Errors.UserNotFound
+        const user = await User.getUser(userId)
+        console.log(user)
+        if (!user) throw Errors.UserNotFound
 
-            const setting = await EventSetting.getEventSettingByKey(
-                EventSettingKey.WatchVideo
-            )
+        const setting = await EventSetting.getEventSettingByKey(
+            EventSettingKey.WatchVideo
+        )
+        if (!setting) throw Errors.EventSettingNotFound
 
-            await this.gemsService.gemsHistory({
-                userId,
-                type: setting.eventSettingKey,
-                gems: setting.gems,
-            })
-
-            return true
+        await this.gemsService.gemsHistory({
+            userId,
+            type: setting.eventSettingKey,
+            gems: setting.gems,
         })
+
+        return true
     }
 }
