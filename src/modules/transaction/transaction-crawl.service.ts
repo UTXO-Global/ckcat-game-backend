@@ -9,9 +9,6 @@ import {
 } from '../queue/crawl-transactions-queue.service'
 import { redisService } from '../redis/redis.service'
 import axios from 'axios'
-import { config } from '../../configs'
-import { helpers } from "@ckb-lumos/lumos";
-import { AGGRON4, LINA } from '../networks'
 import { Transaction } from './entities/transaction.entity'
 import { Order } from '../order/entities/order.entity'
 import { parseHexToString, parsePrice } from '../../utils'
@@ -47,26 +44,25 @@ export class TransactionsCrawlService {
 
     getCells = async () => {
         const url = this.config.ckbURL;
-        const lumosConfig = config.isProductionNodeEnv() ? LINA  : AGGRON4;
-
-        const toScript = helpers.parseAddress(this.config.ckAddress, {
-            config: lumosConfig,
-        });
-
-        let res = await axios.post(url, {
-            "id": 2,
-            "jsonrpc": "2.0",
-            "method": "get_cells",
-            "params": [{
-                "script": {
-                        "code_hash": toScript.codeHash,
-                        "hash_type": toScript.hashType,
-                        "args": toScript.args
-                    },
-                "script_type": "lock"
-              }, "desc", "0x3e8"]
-        })
-        return res.data.result;
+        try {
+            let res = await axios.post(url, {
+                "id": 2,
+                "jsonrpc": "2.0",
+                "method": "get_cells",
+                "params": [{
+                    "script": {
+                            "code_hash": this.config.ckCodeHash,
+                            "hash_type": this.config.ckHashType,
+                            "args": this.config.ckArgs
+                        },
+                    "script_type": "lock"
+                  }, "desc", "0x3e8"]
+            })
+            return res.data.result;
+        } catch (error) {
+            throw error;
+        }
+        
     }
 
     getAllCells = async ( allCells = []) => {

@@ -59,12 +59,12 @@ export class Order extends AppBaseEntity {
             where: {
                 userId: data.userId,
             },
+            order: {
+                createdAt: 'DESC',  // Order by createdAt in descending order
+            },
             skip: pagination.getOffset(),  // Offset to skip
             take: pagination.limit,
         })
-
-        console.log("totalCount::",totalCount);
-        
 
         pagination.total = totalCount;
         return {
