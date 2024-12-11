@@ -39,7 +39,7 @@ export class CheckInService {
             manager
         )
 
-        const eligibleStreaks = [5, 10, 15, 25, 30]
+        const eligibleStreaks = [5, 10, 15, 20, 25, 30]
         if (eligibleStreaks.includes(currentStreak)) {
             await this.gemsService.gemsHistory({
                 userId,

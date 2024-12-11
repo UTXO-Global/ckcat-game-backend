@@ -67,7 +67,7 @@ export class CheckIn extends AppBaseEntity {
             }
 
             if (checkInData.currentStreak === 30) {
-                throw Errors.CompletedRewardLogin
+                throw Errors.CompletedDailyLogin
             }
         }
 

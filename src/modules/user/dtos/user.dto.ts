@@ -16,4 +16,7 @@ export class UserDTO extends BaseDTO {
 
     @Expose()
     gems: number
+
+    @Expose()
+    unlockTraining: number
 }

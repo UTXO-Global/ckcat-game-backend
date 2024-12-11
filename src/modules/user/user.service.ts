@@ -7,12 +7,18 @@ import { AuthService } from '../auth/auth.service'
 import { CacheKeys, CacheManager } from '../../cache'
 import { getNowUtc } from '../../utils'
 import { CheckIn } from '../check-in/entities/check-in.entity'
+import { Gems } from '../gems/entities/gems.entity'
+import { EventSettingKey } from '../event-setting/types/event-setting.type'
+import { EventSetting } from '../event-setting/entities/event-setting.entity'
+import { Errors } from '../../utils/error'
+import { GemsService } from '../gems/gems.service'
 
 @Service()
 export class UserService {
     constructor(
         @Inject() private authService: AuthService,
-        @Inject() private cacheManager: CacheManager
+        @Inject() private cacheManager: CacheManager,
+        @Inject() private gemsService: GemsService
     ) {}
 
     async signIn(data: UserDTO) {
@@ -25,6 +31,23 @@ export class UserService {
         }
 
         const token = await this.authService.signToken(user.id)
+
+        const gems = await Gems.getGemsByType(
+            user.id,
+            EventSettingKey.FirstLogin
+        )
+        if (!gems) {
+            const setting = await EventSetting.getEventSettingByKey(
+                EventSettingKey.FirstLogin
+            )
+            if (!setting) throw Errors.EventSettingNotFound
+
+            await this.gemsService.gemsHistory({
+                userId: user.id,
+                type: setting.eventSettingKey,
+                gems: setting.gems,
+            })
+        }
 
         const res = plainToInstance(UserDTO, user, {
             excludeExtraneousValues: true,
