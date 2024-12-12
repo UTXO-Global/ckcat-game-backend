@@ -73,6 +73,15 @@ export const Errors = {
     ),
     UserIdExisted: new ErrorResp('error.userIdExisted', 'User id existed'),
     InvalidAccount: new ErrorResp('error.invalidAccount', 'Invalid account'),
+    CheckInAlready: new ErrorResp('error.checkInAlready', 'Check in already'),
+    CompletedDailyLogin: new ErrorResp(
+        'error.completedDailyLogin',
+        'You have already completed your 30-day login streak.'
+    ),
+    CheckInRewardNotFound: new ErrorResp(
+        'error.checkInRewardNotFound',
+        'Check in reward not found'
+    ),
     NotEnoughGems: new ErrorResp('error.notEnoughGems', 'Not Enough Gems'),
     EventSettingNotFound: new ErrorResp(
         'error.eventSettingNotFound',

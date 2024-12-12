@@ -8,6 +8,7 @@ import { TransactionRoute } from './modules/transaction/transaction.route'
 import { GemsRoute } from './modules/gems/gems.route'
 import { PackageRoute } from './modules/package/package.route'
 import { OrderRoute } from './modules/order/order.route'
+import { CheckInRoute } from './modules/check-in/check-in.route'
 import { EventSettingRoute } from './modules/event-setting/event-setting.route'
 import { WalletRoute } from './modules/wallet/wallet.route'
 import { ItemRoute } from './modules/item/item.route'
@@ -25,6 +26,7 @@ const app = new App(config, [
             GemsRoute,
             PackageRoute,
             OrderRoute,
+            CheckInRoute,
             EventSettingRoute,
             WalletRoute,
             ItemRoute,

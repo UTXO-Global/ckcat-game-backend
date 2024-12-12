@@ -5,6 +5,8 @@ import { UserDTO } from './dtos/user.dto'
 import { plainToInstance } from 'class-transformer'
 import { AuthService } from '../auth/auth.service'
 import { CacheKeys, CacheManager } from '../../cache'
+import { getNowUtc } from '../../utils'
+import { CheckIn } from '../check-in/entities/check-in.entity'
 import { Gems } from '../gems/entities/gems.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
@@ -28,12 +30,13 @@ export class UserService {
             })
         }
 
-        const token = await this.authService.signToken(
-            user.id,
-        )
+        const token = await this.authService.signToken(user.id)
 
-        const gems = await Gems.getGemsByType(user.id, EventSettingKey.FirstLogin);
-        if(!gems) {
+        const gems = await Gems.getGemsByType(
+            user.id,
+            EventSettingKey.FirstLogin
+        )
+        if (!gems) {
             const setting = await EventSetting.getEventSettingByKey(
                 EventSettingKey.FirstLogin
             )
@@ -49,7 +52,7 @@ export class UserService {
         const res = plainToInstance(UserDTO, user, {
             excludeExtraneousValues: true,
         })
-        
+
         return {
             token,
             ...res,
@@ -57,22 +60,30 @@ export class UserService {
     }
 
     async refreshToken(token: string) {
-        const { userId } = await this.authService.verifyRefreshToken(
-            token
-        )
-        return await this.authService.signToken(
-            userId,
-        );
+        const { userId } = await this.authService.verifyRefreshToken(token)
+        return await this.authService.signToken(userId)
     }
 
     async signOut(token: string) {
-        const { userId } = await this.authService.verifyToken(
-            token
-        )
+        const { userId } = await this.authService.verifyToken(token)
         await this.cacheManager.del(CacheKeys.accessToken(userId, token))
     }
 
     async getProfile(userId: string) {
-        return await User.getUser(userId)
+        const user = await User.getUser(userId)
+        const existedCheckIn = await CheckIn.getLastCheckIn(userId)
+        const now = getNowUtc()
+        const currentDate = new Date(now).setUTCHours(0, 0, 0, 0)
+
+        const dailyReward = existedCheckIn ? existedCheckIn.currentStreak : 0
+        const checkInDate = existedCheckIn?.checkInDate.setUTCHours(0, 0, 0, 0)
+
+        const isCheckIn = checkInDate === currentDate
+
+        return {
+            user,
+            isCheckIn,
+            dailyReward,
+        }
     }
 }
