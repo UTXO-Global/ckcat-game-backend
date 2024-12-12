@@ -1,0 +1,35 @@
+import { Inject, Service } from 'typedi'
+import { Item } from './entities/item.entity'
+import { GetItemByTypeReqDTO } from './dtos/item-get-by-type.dto'
+import { BuyItemByTypeReqDTO } from './dtos/item-buy-by-type.dto'
+import { startTransaction } from '../../database/connection'
+import { Gems } from '../gems/entities/gems.entity'
+import { GemsService } from '../gems/gems.service'
+
+@Service()
+export class ItemService {
+
+    constructor(
+        @Inject() private gemsService: GemsService
+    ) {}
+
+    async getItems(data: GetItemByTypeReqDTO) {
+        return await Item.getItems(data.type)
+    }
+
+    async updateGemsByItem(data: BuyItemByTypeReqDTO) {
+        return await startTransaction(async (manager) => {
+            const item = await Item.getItem(data.itemId)
+            if (!item) return;
+            const gems = await Gems.getGemsByType(data.userId, item.key);
+            
+            if(!gems) {
+                await this.gemsService.gemsHistory({
+                    userId: data.userId,
+                    type: item.key,
+                    gems: -item.gems,
+                })
+            }
+        })
+    }
+}

@@ -11,6 +11,7 @@ import { OrderRoute } from './modules/order/order.route'
 import { CheckInRoute } from './modules/check-in/check-in.route'
 import { EventSettingRoute } from './modules/event-setting/event-setting.route'
 import { WalletRoute } from './modules/wallet/wallet.route'
+import { ItemRoute } from './modules/item/item.route'
 
 const app = new App(config, [
     {
@@ -28,6 +29,7 @@ const app = new App(config, [
             CheckInRoute,
             EventSettingRoute,
             WalletRoute,
+            ItemRoute,
         ],
     },
 ])

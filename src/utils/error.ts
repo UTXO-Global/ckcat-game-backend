@@ -87,6 +87,10 @@ export const Errors = {
         'error.eventSettingNotFound',
         'Event Setting Not Found'
     ),
+    GemsNotAvailable: new ErrorResp(
+        'error.GemsNotAvailable',
+        'Gems Is Not Available'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
