@@ -15,6 +15,9 @@ import { parseHexToString, parsePrice } from '../../utils'
 import { Package } from '../package/entities/package.entity'
 import { startTransaction } from '../../database/connection'
 import { ObjectId } from 'mongodb';
+import { PackageTypes } from '../package/types/package-type.type'
+import { Gems } from '../gems/entities/gems.entity'
+import { GemsService } from '../gems/gems.service'
 
 export class TransactionsCrawlService {
     config: Config
@@ -126,6 +129,17 @@ export class TransactionsCrawlService {
                         status: transactionDetail.tx_status.status,
                     }, manager)
                     await Order.updateOrderStatus(order._id.toString(), transactionDetail.tx_status.status, manager)
+                    // Receiver when buy package with type BuyGems
+                    if (packageModel.type === PackageTypes.BuyGems) {
+                        const gems = await Gems.getGemsByType(order.userId, packageModel.purchaseID);
+                        if(!gems) {
+                            await GemsService.crawlGemsHistory({
+                                userId: order.userId,
+                                type: packageModel.purchaseID,
+                                gems: packageModel.gemReceived,
+                            })
+                        }
+                    }
                 })
             }
         } catch (err) {

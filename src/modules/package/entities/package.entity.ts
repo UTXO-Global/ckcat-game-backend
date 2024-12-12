@@ -32,6 +32,9 @@ export class Package extends AppBaseEntity {
     @Column()
     numberDayReceived:  number
 
+    @Column()
+    type:  string
+
     static async getPackages() {
         return await Package.find();
     }
