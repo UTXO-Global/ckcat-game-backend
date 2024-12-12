@@ -117,6 +117,7 @@ export class TransactionsCrawlService {
                     return parsePrice(output.capacity);
                 });
                 const packageModel = await Package.getPackage(order.packageId);
+                if (!packageModel) continue;
                 const price = capacities.includes(packageModel.price);
 
                 if (!price) continue;
