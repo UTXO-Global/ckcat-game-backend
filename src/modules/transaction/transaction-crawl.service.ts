@@ -103,7 +103,6 @@ export class TransactionsCrawlService {
             
             if (!transactions.length) return
 
-            console.log("transactions::", transactions);
             for (const transaction of transactions) {
                 
                 const transactionDetail = await this.getTransaction(transaction.out_point.tx_hash);
