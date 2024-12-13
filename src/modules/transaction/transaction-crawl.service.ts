@@ -18,6 +18,7 @@ import { ObjectId } from 'mongodb';
 import { PackageTypes } from '../package/types/package-type.type'
 import { Gems } from '../gems/entities/gems.entity'
 import { GemsService } from '../gems/gems.service'
+import { TransactionStatusTypes } from './types/transaction-status.type'
 
 export class TransactionsCrawlService {
     config: Config
@@ -99,8 +100,9 @@ export class TransactionsCrawlService {
         try {
             const transactions = await this.getTransactions();
             
-            if (!transactions.length) return
             
+            if (!transactions.length) return
+
             for (const transaction of transactions) {
                 
                 const transactionDetail = await this.getTransaction(transaction.out_point.tx_hash);
@@ -132,8 +134,7 @@ export class TransactionsCrawlService {
                     await Order.updateOrderStatus(order._id.toString(), transactionDetail.tx_status.status, manager)
                     // Receiver when buy package with type BuyGems
                     if (packageModel.type === PackageTypes.BuyGems) {
-                        const gems = await Gems.getGemsByType(order.userId, packageModel.purchaseID);
-                        if(!gems) {
+                        if(transactionDetail.tx_status.status === TransactionStatusTypes.Committed) {
                             await GemsService.crawlGemsHistory({
                                 userId: order.userId,
                                 type: packageModel.purchaseID,

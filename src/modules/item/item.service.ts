@@ -22,8 +22,15 @@ export class ItemService {
         return await startTransaction(async (manager) => {
             const item = await Item.getItem(data.itemId)
             if (!item) return;
+            if (item.type === ItemTypes.Boost) {
+                await this.gemsService.gemsHistory({
+                    userId: data.userId,
+                    type: item.key,
+                    gems: -item.gems,
+                })
+                return
+            }
             const gems = await Gems.getGemsByType(data.userId, item.key);
-            
             if(!gems) {
                 await this.gemsService.gemsHistory({
                     userId: data.userId,
