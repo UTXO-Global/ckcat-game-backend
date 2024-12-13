@@ -5,6 +5,7 @@ import { BuyItemByTypeReqDTO } from './dtos/item-buy-by-type.dto'
 import { startTransaction } from '../../database/connection'
 import { Gems } from '../gems/entities/gems.entity'
 import { GemsService } from '../gems/gems.service'
+import { ItemTypes } from './types/item.type'
 
 @Service()
 export class ItemService {
@@ -31,5 +32,19 @@ export class ItemService {
                 })
             }
         })
+    }
+
+    async getUserSlot(userId: string) {
+        let slot = 0;
+        const slot1 = await Gems.getGemsByType(userId, ItemTypes.Slot1);
+        if (slot1) {
+            slot = 1
+        }
+        const slot2 = await Gems.getGemsByType(userId, ItemTypes.Slot2);
+        if (slot2) {
+            slot = 2
+        }
+
+        return slot;
     }
 }

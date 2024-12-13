@@ -14,7 +14,7 @@ export class GemsService {
             const user = await User.getUser(data.userId)
             if ((data.gems < 0) && user.gems < Math.abs(data.gems)) 
             {
-                throw Errors.EventSettingNotFound
+                throw Errors.GemsNotAvailable
             }
             await Gems.createGems(plainToInstance(GemsDTO, data), manager)
             await User.updateGems(plainToInstance(GemsDTO, data), manager)

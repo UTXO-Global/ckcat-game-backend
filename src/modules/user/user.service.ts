@@ -12,13 +12,16 @@ import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { Errors } from '../../utils/error'
 import { GemsService } from '../gems/gems.service'
+import { ItemTypes } from '../item/types/item.type'
+import { ItemService } from '../item/item.service'
 
 @Service()
 export class UserService {
     constructor(
         @Inject() private authService: AuthService,
         @Inject() private cacheManager: CacheManager,
-        @Inject() private gemsService: GemsService
+        @Inject() private gemsService: GemsService,
+        @Inject() private itemService: ItemService
     ) {}
 
     async signIn(data: UserDTO) {
@@ -52,7 +55,8 @@ export class UserService {
         const res = plainToInstance(UserDTO, user, {
             excludeExtraneousValues: true,
         })
-
+        
+        
         return {
             token,
             ...res,
@@ -80,10 +84,14 @@ export class UserService {
 
         const isCheckIn = checkInDate === currentDate
 
+        const slot = await this.itemService.getUserSlot(user.id)
+
+
         return {
             user,
             isCheckIn,
             dailyReward,
+            slot,
         }
     }
 }
