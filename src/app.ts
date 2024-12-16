@@ -20,6 +20,7 @@ import expressBasicAuth from 'express-basic-auth'
 import { serverAdapter } from './modules/queue/queue.service'
 
 import {
+    packageCronService,
     transactionCrawlService,
 } from './services'
 
@@ -117,6 +118,7 @@ export class App {
         await Promise.all([
             redisService.connect(),
             transactionCrawlService.addTransactionsCrawlToQueue(),
+            packageCronService.addPackageCronToQueue(),
         ])
 
         const start = Date.now()

@@ -19,6 +19,7 @@ import { PackageTypes } from '../package/types/package-type.type'
 import { Gems } from '../gems/entities/gems.entity'
 import { GemsService } from '../gems/gems.service'
 import { TransactionStatusTypes } from './types/transaction-status.type'
+import { PackageTransactions } from '../package/entities/package-transactions.entity'
 
 export class TransactionsCrawlService {
     config: Config
@@ -99,8 +100,7 @@ export class TransactionsCrawlService {
     transactionsCrawl = async () => {
         try {
             const transactions = await this.getTransactions();
-            
-            
+
             if (!transactions.length) return
 
             for (const transaction of transactions) {
@@ -141,6 +141,17 @@ export class TransactionsCrawlService {
                                 gems: packageModel.gemReceived,
                             })
                         }
+                    }
+                    // Receiver when buy package with type BuyCard
+                    if (packageModel.type === PackageTypes.BuyCard) {
+                        const packageId = packageModel._id.toString();
+                        await PackageTransactions.createPackageTransaction({
+                            userId: order.userId,
+                            packageId: packageId,
+                            orderId: order._id.toString(),
+                            purchaseID: packageModel.purchaseID,
+                            expired: 0,
+                        }, manager)
                     }
                 })
             }
