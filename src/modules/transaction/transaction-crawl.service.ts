@@ -152,6 +152,12 @@ export class TransactionsCrawlService {
                             purchaseID: packageModel.purchaseID,
                             expired: 0,
                         }, manager)
+
+                        await GemsService.crawlGemsHistory({
+                            userId: order.userId,
+                            type: packageModel.purchaseID,
+                            gems: packageModel.gemReceived,
+                        })
                     }
                 })
             }

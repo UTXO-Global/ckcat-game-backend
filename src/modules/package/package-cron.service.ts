@@ -47,7 +47,7 @@ export class PackageCronService {
                 if (item.purchaseID === PurchaseTypes.MonthCard) {
                     // Calculate the date 30 days ago
                     const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
                     const startDate = new Date(item.createdAt);
                     if (startDate > thirtyDaysAgo) {
                         const packageModel = await Package.getPackage(item.packageId);
@@ -63,7 +63,7 @@ export class PackageCronService {
                 if (item.purchaseID === PurchaseTypes.WeeklyCard2) {
                     // Calculate the date 14 days ago
                     const fourteenDaysAgo = new Date();
-                    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+                    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
                     const startDate = new Date(item.createdAt);
                     if (startDate > fourteenDaysAgo) {
                         const packageModel = await Package.getPackage(item.packageId);
@@ -79,7 +79,7 @@ export class PackageCronService {
                 if (item.purchaseID === PurchaseTypes.WeeklyCard1) {
                     // Calculate the date 7 days ago
                     const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
                     const startDate = new Date(item.createdAt);
                     if (startDate > sevenDaysAgo) {
                         const packageModel = await Package.getPackage(item.packageId);
