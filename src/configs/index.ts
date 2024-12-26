@@ -7,7 +7,6 @@ import {
 } from 'class-validator'
 import Container, { Service } from 'typedi'
 import { Type, plainToInstance } from 'class-transformer'
-import { RedisConfig } from './redis.config'
 import { JwtConfig } from './jwt.config'
 import { MongoDbConfig } from './mongodb.config'
 import { AwsConfig } from './aws.config'
@@ -90,6 +89,14 @@ export class Config {
     @IsNotEmpty()
     ckArgs: string
 
+    @IsString()
+    @IsNotEmpty()
+    apiUrl: string
+
+    @IsString()
+    @IsNotEmpty()
+    apiKey: string
+
     constructor() {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
@@ -111,6 +118,8 @@ export class Config {
         this.ckCodeHash = env.CK_CODE_HASH
         this.ckHashType = env.CK_HASH_TYPE
         this.ckArgs = env.CK_ARGS
+        this.apiUrl = env.API_URL
+        this.apiKey = env.API_KEY
     }
 
     isProductionNodeEnv() {
@@ -122,9 +131,9 @@ export class Config {
     }
 
     private decodeObjToStringRedis(str: string) {
-        const json = this.decodeStringObj(str);
-        const { host, port } = json;
-        return `redis://${host}:${port}`;
+        const json = this.decodeStringObj(str)
+        const { host, port } = json
+        return `redis://${host}:${port}`
     }
 }
 

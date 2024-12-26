@@ -12,8 +12,8 @@ import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { Errors } from '../../utils/error'
 import { GemsService } from '../gems/gems.service'
-import { ItemTypes } from '../item/types/item.type'
 import { ItemService } from '../item/item.service'
+import { UserWallet } from '../wallet/entities/user-wallet.entity'
 
 @Service()
 export class UserService {
@@ -55,8 +55,7 @@ export class UserService {
         const res = plainToInstance(UserDTO, user, {
             excludeExtraneousValues: true,
         })
-        
-        
+
         return {
             token,
             ...res,
@@ -75,6 +74,8 @@ export class UserService {
 
     async getProfile(userId: string) {
         const user = await User.getUser(userId)
+        const wallet = await UserWallet.getWalletByUserId(userId)
+
         const existedCheckIn = await CheckIn.getLastCheckIn(userId)
         const now = getNowUtc()
         const currentDate = new Date(now).setUTCHours(0, 0, 0, 0)
@@ -85,13 +86,12 @@ export class UserService {
         const isCheckIn = checkInDate === currentDate
 
         const slot = await this.itemService.getUserSlot(user.id)
-
-
         return {
             user,
             isCheckIn,
             dailyReward,
             slot,
+            walletAddress: wallet?.address || '',
         }
     }
 }

@@ -91,6 +91,10 @@ export const Errors = {
         'error.GemsNotAvailable',
         'Gems Is Not Available'
     ),
+    InternalServiceError: new ErrorResp(
+        'error.internalServiceError',
+        'Internal Service Error'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
