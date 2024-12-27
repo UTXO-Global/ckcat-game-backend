@@ -6,6 +6,7 @@ import { AuthMiddleware } from '../auth/auth.middleware'
 import { InternalController } from './internal.controller'
 import { transformAndValidate } from '../../utils/validator'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
+import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
 
 @Service()
 export class InternalRoute implements BaseRoute {
@@ -36,6 +37,12 @@ export class InternalRoute implements BaseRoute {
             this.authMiddleware.authorization.bind(this.authMiddleware),
             transformAndValidate(InternalRefferalReqDTO),
             this.internalController.addReferral.bind(this.internalController)
+        )
+        this.router.get(
+            '/leaderboard',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            transformAndValidate(InternalLeaderboardReqDTO),
+            this.internalController.getLeaderboard.bind(this.internalController)
         )
     }
 }
