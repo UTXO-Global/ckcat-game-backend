@@ -5,6 +5,7 @@ import { ResponseWrapper } from '../../utils/response'
 import { CKAuthRequest } from '../auth/auth.middleware'
 import { DataRequest } from '../../base/base.request'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
+import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
 
 @Service()
 export class InternalController {
@@ -45,6 +46,24 @@ export class InternalController {
             req.data.userId = req.userId
             const result = await this.internalService.addRefferal(req.data)
             res.send(new ResponseWrapper(result))
+        } catch (err) {
+            if (err.status && err.message) {
+                res.status(err.status).send(new ResponseWrapper(null, err))
+            } else {
+                next(err)
+            }
+        }
+    }
+
+    async getLeaderboard(
+        req: DataRequest<InternalLeaderboardReqDTO>,
+        res: Response,
+        next: NextFunction
+    ) {
+        try {
+            req.data.userId = req.userId
+            const result = await this.internalService.getLeaderboard(req.data)
+            res.send(result)
         } catch (err) {
             if (err.status && err.message) {
                 res.status(err.status).send(new ResponseWrapper(null, err))
