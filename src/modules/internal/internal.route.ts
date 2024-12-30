@@ -44,5 +44,12 @@ export class InternalRoute implements BaseRoute {
             transformAndValidate(InternalLeaderboardReqDTO),
             this.internalController.getLeaderboard.bind(this.internalController)
         )
+        this.router.get(
+            '/referrals',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            this.internalController.getListReferral.bind(
+                this.internalController
+            )
+        )
     }
 }
