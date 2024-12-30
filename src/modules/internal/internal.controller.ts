@@ -72,4 +72,23 @@ export class InternalController {
             }
         }
     }
+
+    async getListReferral(
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) {
+        try {
+            const result = await this.internalService.getListReferral(
+                req.userId
+            )
+            res.send(new ResponseWrapper(result))
+        } catch (err) {
+            if (err.status && err.message) {
+                res.status(err.status).send(new ResponseWrapper(null, err))
+            } else {
+                next(err)
+            }
+        }
+    }
 }

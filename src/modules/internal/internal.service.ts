@@ -182,4 +182,41 @@ export class InternalService {
         )
         return result
     }
+
+    async retrieveListReferral(walletAddress: string) {
+        try {
+            const response = await axios.get(
+                `${this.config.apiUrl}/ckcat/internal/referral/invitees/${walletAddress}`,
+                {
+                    headers: {
+                        'API-KEY': this.config.apiKey,
+                    },
+                }
+            )
+            if (!response || !response.data) {
+                throw Errors.InternalServiceError
+            }
+            return response.data
+        } catch (error) {
+            if (error.response) {
+                throw {
+                    status: error.response.status,
+                    message: error.response.data?.message || 'Unknown error',
+                }
+            } else {
+                throw Errors.InternalServiceError
+            }
+        }
+    }
+
+    async getListReferral(userId: string) {
+        const userWallet = await UserWallet.getWalletByUserId(userId)
+        if (!userWallet) {
+            throw Errors.UserNotFound
+        }
+
+        const list = await this.retrieveListReferral(userWallet.address)
+
+        return list
+    }
 }
