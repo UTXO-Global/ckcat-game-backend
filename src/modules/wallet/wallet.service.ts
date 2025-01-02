@@ -10,15 +10,16 @@ import { Errors } from '../../utils/error'
 
 @Service()
 export class WalletService {
-    constructor(
-        @Inject() private gemsService: GemsService
-    ) {}
+    constructor(@Inject() private gemsService: GemsService) {}
 
     async connectWallet(data: WalletDTO) {
         return await startTransaction(async (manager) => {
-            await UserWallet.createUserWallet(data, manager)
-            const gems = await Gems.getGemsByType(data.userId, EventSettingKey.ConnectWallet);
-            if(!gems) {
+            await UserWallet.upsertUserWallet(data, manager)
+            const gems = await Gems.getGemsByType(
+                data.userId,
+                EventSettingKey.ConnectWallet
+            )
+            if (!gems) {
                 const setting = await EventSetting.getEventSettingByKey(
                     EventSettingKey.ConnectWallet
                 )
@@ -32,5 +33,4 @@ export class WalletService {
             }
         })
     }
-
 }
