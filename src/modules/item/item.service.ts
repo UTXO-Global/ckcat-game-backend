@@ -6,6 +6,8 @@ import { startTransaction } from '../../database/connection'
 import { Gems } from '../gems/entities/gems.entity'
 import { GemsService } from '../gems/gems.service'
 import { ItemTypes } from './types/item.type'
+import { User } from '../user/entities/user.entity'
+import { Errors } from '../../utils/error'
 
 @Service()
 export class ItemService {
@@ -17,8 +19,16 @@ export class ItemService {
 
     async updateGemsByItem(data: BuyItemByTypeReqDTO) {
         return await startTransaction(async (manager) => {
+            const user = await User.getUser(data.userId)
+            if (!user) throw Errors.UserNotFound
+
             const item = await Item.getItem(data.itemId)
             if (!item) return
+
+            if (user.gems < item.gems) {
+                throw Errors.NotEnoughGems
+            }
+
             await this.gemsService.gemsHistory({
                 userId: data.userId,
                 type: item.key,
