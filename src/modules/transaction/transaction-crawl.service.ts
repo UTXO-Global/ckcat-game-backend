@@ -172,7 +172,7 @@ export class TransactionsCrawlService {
             {},
             {
                 repeat: {
-                    every: 100 * 1000,
+                    every: 12 * 1000,
                 },
             }
         )
