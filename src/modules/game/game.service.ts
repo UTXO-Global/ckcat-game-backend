@@ -9,10 +9,16 @@ import { GemsService } from '../gems/gems.service'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
+import { decrypt } from '../../utils'
+import { Config } from '../../configs'
+import { validateOrReject } from 'class-validator'
 
 @Service()
 export class GameService {
-    constructor(@Inject() private gemsService: GemsService) {}
+    constructor(
+        @Inject() private gemsService: GemsService,
+        @Inject() private config: Config
+    ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
             return await Game.createGame(
@@ -92,5 +98,43 @@ export class GameService {
             await User.updateUser(user, manager)
             return true
         })
+    }
+
+    async getDecryptedGameData(userId: string) {
+        try {
+            // Fetch the game data by userId
+            const game = await Game.findOne({ where: { userId } })
+            if (!game) {
+                throw new Error('Game not found')
+            }
+
+            // Extract the secret key and IV key
+            const { secretKey, ivKey } = this.config
+
+            // Decrypt the game data
+            const decryptedData = decrypt(game.data, secretKey, ivKey)
+
+            // Decode Base64 string to UTF-8
+            const decodedData = Buffer.from(decryptedData, 'base64').toString(
+                'utf8'
+            )
+
+            // Convert the decoded JSON string to a GameDTO object
+            // const gameData = plainToInstance(GameDTO, JSON.parse(decodedData), {
+            //     excludeExtraneousValues: true,
+            // })
+
+            // Validate the GameDTO object
+            await validateOrReject(JSON.parse(decodedData))
+
+            // Parse the decoded data
+            const parsedData = JSON.parse(decodedData)
+            const totalItems = parsedData?.items.length
+
+            return { decodedData: parsedData, totalItems }
+        } catch (error) {
+            console.error('Error during data decryption and validation:', error)
+            throw new Error('Invalid game data')
+        }
     }
 }
