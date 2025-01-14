@@ -19,4 +19,13 @@ export class UserDTO extends BaseDTO {
 
     @Expose()
     unlockTraining: number
+
+    @Expose()
+    lastLogin: Date
+
+    @Expose()
+    totalPlayingTime: number
+
+    @Expose()
+    totalLaunch: number
 }

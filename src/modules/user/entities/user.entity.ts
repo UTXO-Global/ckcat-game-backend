@@ -31,6 +31,15 @@ export class User extends AppBaseEntity {
     @Column()
     unlockTraining: number
 
+    @Column()
+    lastLogin: Date
+
+    @Column()
+    totalPlayingTime: number
+
+    @Column()
+    totalLaunch: number
+
     static async createUser(
         data: UserDTO,
         manager: EntityManager = AppDataSource.manager

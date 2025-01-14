@@ -13,6 +13,7 @@ import { EventSettingRoute } from './modules/event-setting/event-setting.route'
 import { WalletRoute } from './modules/wallet/wallet.route'
 import { ItemRoute } from './modules/item/item.route'
 import { InternalRoute } from './modules/internal/internal.route'
+import { GameSessionRoute } from './modules/game-session/game-session.route'
 
 const app = new App(config, [
     {
@@ -32,6 +33,7 @@ const app = new App(config, [
             WalletRoute,
             ItemRoute,
             InternalRoute,
+            GameSessionRoute,
         ],
     },
 ])
