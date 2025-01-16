@@ -16,6 +16,7 @@ import { InternalRoute } from './modules/internal/internal.route'
 import { GameSessionRoute } from './modules/game-session/game-session.route'
 import { AdminRoute } from './modules/admin/admin.route'
 import { UserAdminRoute } from './modules/user/admin/user-admin.route'
+import { DashboardRoute } from './modules/dashboard/dashboard.route'
 
 const app = new App(config, [
     {
@@ -40,7 +41,7 @@ const app = new App(config, [
         groups: [
             {
                 group: 'admin',
-                routes: [AdminRoute, UserAdminRoute],
+                routes: [AdminRoute, UserAdminRoute, DashboardRoute],
             },
         ],
     },
