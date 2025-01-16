@@ -11,6 +11,7 @@ import { JwtConfig } from './jwt.config'
 import { MongoDbConfig } from './mongodb.config'
 import { AwsConfig } from './aws.config'
 import { BotConfig } from './bot.config'
+import { DecryptDataConfig } from './decrypt-data.config'
 
 @Service()
 export class Config {
@@ -97,6 +98,10 @@ export class Config {
     @IsNotEmpty()
     apiKey: string
 
+    @ValidateNested()
+    @Type(() => DecryptDataConfig)
+    decryptDataConfig: DecryptDataConfig
+
     constructor() {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
@@ -120,6 +125,7 @@ export class Config {
         this.ckArgs = env.CK_ARGS
         this.apiUrl = env.API_URL
         this.apiKey = env.API_KEY
+        this.decryptDataConfig = this.decodeStringObj(env.DECRYPT_DATA_CONFIG)
     }
 
     isProductionNodeEnv() {

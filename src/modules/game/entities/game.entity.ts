@@ -9,10 +9,11 @@ import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
 import { plainToInstance } from 'class-transformer'
 import { GameDTO } from '../dtos/game.dto'
-import { decrypt, getNowUtc } from '../../../utils'
+import { decryptData, getNowUtc } from '../../../utils'
 import Container from 'typedi'
 import { Config } from '../../../configs'
 import { validateOrReject } from 'class-validator'
+import { Errors } from '../../../utils/error'
 
 @Entity()
 export class Game extends AppBaseEntity {
@@ -74,15 +75,19 @@ export class Game extends AppBaseEntity {
             // Fetch the game data by userId
             const game = await Game.findOne({ where: { userId } })
             if (!game) {
-                throw new Error('Game not found')
+                throw Errors.GameNotFound
             }
             const config = Container.get(Config)
 
             // Extract the secret key and IV key
-            const { secretKey, ivKey } = config
+            const { secretKeyDecrypt, ivKeyDecrypt } = config.decryptDataConfig
 
             // Decrypt the game data
-            const decryptedData = decrypt(game.data, secretKey, ivKey)
+            const decryptedData = decryptData(
+                game.data,
+                secretKeyDecrypt,
+                ivKeyDecrypt
+            )
 
             // Decode Base64 string to UTF-8
             const decodedData = Buffer.from(decryptedData, 'base64').toString(
@@ -96,7 +101,14 @@ export class Game extends AppBaseEntity {
             const parsedData = JSON.parse(decodedData)
             const totalItems = parsedData?.items.length
 
-            return { decodedData: parsedData, totalItems }
+            // Extract the BossCount
+            const bossCountItem = parsedData?.items.find(
+                (item: any) => item.key === 'BossCount'
+            )
+
+            const bossCount = bossCountItem ? bossCountItem.valueInt : 0
+
+            return bossCount
         } catch (error) {
             console.error('Error during data decryption and validation:', error)
             throw new Error('Invalid game data')

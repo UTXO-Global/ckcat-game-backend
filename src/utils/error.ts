@@ -95,6 +95,7 @@ export const Errors = {
         'error.internalServiceError',
         'Internal Service Error'
     ),
+    GameNotFound: new ErrorResp('error.gameNotFound', 'Game Not Found'),
 }
 
 export const handleError = (err: Error, res: Response) => {

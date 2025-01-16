@@ -99,9 +99,7 @@ export class GameController {
         try {
             const { userId } = req
             res.send(
-                new ResponseWrapper(
-                    await this.gameService.getDecryptedGameData(userId)
-                )
+                new ResponseWrapper(await this.gameService.getData(userId))
             )
         } catch (err) {
             next(err)

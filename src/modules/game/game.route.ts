@@ -49,7 +49,6 @@ export class GameRoute implements BaseRoute {
         this.router.get(
             '/data',
             this.authMiddleware.authorization.bind(this.authMiddleware),
-
             this.gameController.getDecryptedGameData.bind(this.gameController)
         )
     }

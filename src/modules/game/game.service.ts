@@ -100,7 +100,12 @@ export class GameService {
         })
     }
 
-    async getDecryptedGameData(userId: string) {
+    private async getDecryptedGameData(userId: string) {
         return await Game.getDecryptedGameData(userId)
+    }
+
+    async getData(userId: string) {
+        const decryptData = await this.getDecryptedGameData(userId)
+        return { userId, bossCount: decryptData }
     }
 }
