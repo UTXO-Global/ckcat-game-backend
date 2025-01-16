@@ -95,6 +95,11 @@ export const Errors = {
         'error.internalServiceError',
         'Internal Service Error'
     ),
+    AdminNotFound: new ErrorResp('error.adminNotFound', 'Admin Not Found'),
+    EndMustGreaterThanStart: new ErrorResp(
+        'error.endMustGreaterThanStart',
+        'End must greater than start'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {

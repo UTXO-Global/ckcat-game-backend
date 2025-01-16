@@ -13,6 +13,17 @@ export const CacheKeys = {
     user: (userId: string) => `user:${userId}`,
     aiBullets: `ai-bullets`,
     deduction: (meetingId: string) => `deduction:${meetingId}`,
+    admin: (email: string) => `admin:${email}`,
+}
+
+export const CacheTimes = {
+    day: (time = 1) => {
+        return time * CacheTimes.hour(24)
+    },
+    hour: (time = 1) => {
+        return time * CacheTimes.minute(60)
+    },
+    minute: (time = 1) => time * 60,
 }
 
 @Service()
@@ -90,5 +101,26 @@ export class CacheManager {
 
     async setExpired(key: string, seconds: number, value: string) {
         await this.redisClient.setex(key, seconds, value)
+    }
+
+    async jsonset(key: string, object: unknown, path?: string, ttl?: number) {
+        path = path ? `$.${path}` : '$'
+        return await this.redisClient
+            .multi()
+            .call('JSON.SET', key, path, JSON.stringify(object))
+            .expire(key, ttl)
+            .exec()
+    }
+
+    async jsonget<T>(cls: ClassConstructor<T>, key: string, path?: string) {
+        path = path ? `$.${path}` : '$'
+        const res = await this.redisClient.call('JSON.GET', key, path)
+
+        if (typeof res !== 'string') return
+
+        const parsed: [] = JSON.parse(res)
+        return plainToInstance(cls, parsed, {
+            excludeExtraneousValues: true,
+        })
     }
 }
