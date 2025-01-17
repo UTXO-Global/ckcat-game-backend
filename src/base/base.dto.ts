@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Expose } from 'class-transformer'
 import { Request } from 'express'
-import { AuthRequest } from '../modules/auth/auth.middleware'
+import { AuthRequest, CKAuthRequest } from '../modules/auth/auth.middleware'
 import { Pagination } from '../utils/response'
 import { AuthCMSRequest } from '../modules/admin/auth/auth-admin.middleware'
 
@@ -101,5 +101,22 @@ export class AuthCMSReqDTO extends DataCMSReqDTO {
     bind?(req: AuthCMSRequest) {
         super.bind(req)
         this.email = req.email
+    }
+}
+
+export class DataCKReqDTO extends BaseReqDTO {
+    pagination?: Pagination
+
+    bind?(req: CKAuthRequest): void {
+        this.pagination = Pagination.fromReq(req)
+    }
+}
+
+export class AuthReqDTO extends DataCKReqDTO {
+    userId: string
+
+    bind?(req: CKAuthRequest) {
+        super.bind(req)
+        this.userId = req.userId
     }
 }
