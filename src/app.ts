@@ -19,12 +19,12 @@ import { logger } from './utils/logger'
 import expressBasicAuth from 'express-basic-auth'
 import { serverAdapter } from './modules/queue/queue.service'
 
-import {
-    packageCronService,
-    transactionCrawlService,
-} from './services'
+import { packageCronService, transactionCrawlService } from './services'
 
 import { redisService } from './modules/redis/redis.service'
+import { setupWorkers } from './modules/queue/workers'
+import { Markup, Telegraf } from 'telegraf'
+import { BotUser } from './modules/bot/entities/bot-user.entity'
 
 export interface BaseRoute {
     route?: string
@@ -39,7 +39,6 @@ export interface AppRoute {
     }[]
     routes?: ClassConstructor<BaseRoute>[]
 }
-
 
 export class App {
     private app = express()
@@ -74,13 +73,15 @@ export class App {
             })
         )
 
-        this.app.use('/admin/queues', expressBasicAuth({
-            challenge: true,
-            users: { admin: this.config.basicAuthPassword },
-        }), serverAdapter.getRouter())
+        this.app.use(
+            '/admin/queues',
+            expressBasicAuth({
+                challenge: true,
+                users: { admin: this.config.basicAuthPassword },
+            }),
+            serverAdapter.getRouter()
+        )
     }
-
-    
 
     private initRoutes(routes: AppRoute[]) {
         routes.forEach((route) => {
@@ -126,6 +127,8 @@ export class App {
         validateEnv(this.config)
         await Promise.all([AppDataSource.initialize()])
 
+        setupWorkers()
+
         this.app.listen(this.config.port, () => {
             return logger.info(
                 `Server is listening at port ${
@@ -146,5 +149,43 @@ export class App {
                 })}`
             )
         })
+
+        this.botContentConfig()
+    }
+
+    async botContentConfig() {
+        const bot = new Telegraf(this.config.telegramTokenBot)
+
+        bot.start(async (ctx) => {
+            const userId = String(ctx.message.from.id)
+
+            const existingUser = await BotUser.findOne({
+                where: { userId },
+            })
+
+            if (!existingUser) {
+                await BotUser.save({ userId })
+            }
+
+            const keyboard = Markup.inlineKeyboard([
+                Markup.button.url('PLAY GAME', this.config.bot.url),
+            ])
+
+            const imageUrl =
+                'https://purple-advisory-wombat-172.mypinata.cloud/ipfs/QmRXiq4qhHAzqufjAVUFQzHGrTcpqNCMUADd46aeS2ofXA?pinataGatewayToken=YGrSaWv7gcuq1OtGbYvONGKkoZ2K4X4JxSnjDZeOE-HAIFWMayFyhMjP8FSr4JaY'
+            await ctx.replyWithPhoto(
+                { url: imageUrl },
+                {
+                    caption: this.config.bot.title,
+                    reply_markup: keyboard.reply_markup,
+                }
+            )
+        })
+
+        bot.launch().then(() => {
+            console.log('Bot is running')
+        })
+        process.once('SIGINT', () => bot.stop('SIGINT'))
+        process.once('SIGTERM', () => bot.stop('SIGTERM'))
     }
 }

@@ -19,6 +19,7 @@ import { UserAdminRoute } from './modules/user/admin/user-admin.route'
 import { DashboardRoute } from './modules/dashboard/dashboard.route'
 import { GameAirdropAdminRoute } from './modules/game-airdrop/admin/game-airdrop-admin.route'
 import { GameAirdropRoute } from './modules/game-airdrop/game-airdrop.route'
+import { BotRoute } from './modules/bot/bot.route'
 
 const app = new App(config, [
     {
@@ -49,6 +50,7 @@ const app = new App(config, [
                     UserAdminRoute,
                     DashboardRoute,
                     GameAirdropAdminRoute,
+                    BotRoute,
                 ],
             },
         ],
