@@ -95,6 +95,32 @@ export const Errors = {
         'error.internalServiceError',
         'Internal Service Error'
     ),
+    AdminNotFound: new ErrorResp('error.adminNotFound', 'Admin Not Found'),
+    EndMustGreaterThanStart: new ErrorResp(
+        'error.endMustGreaterThanStart',
+        'End must greater than start'
+    ),
+    GameAirdropNotFound: new ErrorResp(
+        'error.gameAirdropNotFound',
+        'Game Airdrop Not Found'
+    ),
+    AirdropClosed: new ErrorResp('error.airdropClosed', 'Airdrop Closed'),
+    WalletAddressNotFound: new ErrorResp(
+        'error.walletAddressNotFound',
+        'Wallet Address Not Found'
+    ),
+    WalletTypeNotSupport: new ErrorResp(
+        'error.walletTypeNotSupport',
+        'Wallet Type Not Support'
+    ),
+    MaxParticipationReached: new ErrorResp(
+        'error.maxParticipationReached',
+        'Max Participation Reached'
+    ),
+    BotSettingNotFound: new ErrorResp(
+        'erorr.botSettingNotFound',
+        'Bot Setting Not Found'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
