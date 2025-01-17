@@ -70,7 +70,7 @@ export class Game extends AppBaseEntity {
         })
     }
 
-    static async getDecryptedGameData(userId: string) {
+    static async decryptedGameData(userId: string) {
         try {
             // Fetch the game data by userId
             const game = await Game.findOne({ where: { userId } })

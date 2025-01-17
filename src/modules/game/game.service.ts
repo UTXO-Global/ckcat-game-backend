@@ -9,9 +9,7 @@ import { GemsService } from '../gems/gems.service'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
-import { decrypt } from '../../utils'
 import { Config } from '../../configs'
-import { validateOrReject } from 'class-validator'
 
 @Service()
 export class GameService {
@@ -100,12 +98,12 @@ export class GameService {
         })
     }
 
-    private async getDecryptedGameData(userId: string) {
-        return await Game.getDecryptedGameData(userId)
+    private async decryptedGameData(userId: string) {
+        return await Game.decryptedGameData(userId)
     }
 
     async getData(userId: string) {
-        const decryptData = await this.getDecryptedGameData(userId)
+        const decryptData = await this.decryptedGameData(userId)
         return { userId, bossCount: decryptData }
     }
 }
