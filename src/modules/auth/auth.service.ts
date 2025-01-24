@@ -1,32 +1,16 @@
-import { Inject, Service } from 'typedi'
-import { Config } from '../../configs'
-import { CacheKeys, CacheManager } from '../../caches'
-import jwt, { JsonWebTokenError, JwtPayload } from 'jsonwebtoken'
-import { Errors } from '../../utils/error'
 import { instanceToPlain, plainToInstance } from 'class-transformer'
+import jwt from 'jsonwebtoken'
+import { Inject, Service } from 'typedi'
+import { CacheKeys, CacheManager } from '../../cache'
+import { Config } from '../../configs'
+import { Errors } from '../../utils/error'
 import { User } from '../user/entities/user.entity'
-import { UserDTO } from '../user/dtos/user.dto'
 import { verifyTelegramWebAppData } from '../../utils'
+
+const CK_ACCESS_TOKEN_KEY = 'ck_access_token'
 
 export class AuthPayload {
     userId: string
-    email: string
-}
-
-export class AuthTelegramPayload {
-    initData: string
-    id: string
-    user: UserDTO
-}
-
-export interface AuthToken {
-    token: string
-    expireAt: number
-}
-
-export class OTPPayload {
-    phoneNumber: string
-    otp: string
 }
 
 @Service()
@@ -36,52 +20,40 @@ export class AuthService {
         @Inject() private cacheManager: CacheManager
     ) {}
 
-    async signToken(payload: AuthPayload, salt?: string) {
+    async signToken(userId: string) {
+        
         const { accessSecret, accessExpiresIn } = this.config.jwt
-        const jwtSecret = accessSecret + (salt ?? '')
-        const sign = jwt.sign(payload, jwtSecret, {
+        
+        const jwtSecret = accessSecret
+        const sign = jwt.sign({userId: userId}, jwtSecret, {
             expiresIn: accessExpiresIn,
         })
 
         this.cacheManager.set(
-            CacheKeys.accessToken(payload.userId, sign),
+            CacheKeys.accessToken(userId.toString(), sign),
             Date.now().toString(),
             accessExpiresIn
         )
-        return this.generateAuthToken(sign)
-    }
-
-    async verifyInitData(initData: string) {
-        return verifyTelegramWebAppData(initData, this.config.telegramTokenBot)
+        return sign
+        
     }
 
     async verifyToken(token: string) {
         const decoded = jwt.decode(token, {
             complete: true,
         })
-        if (!decoded) {
-            throw Errors.Unauthorized
-        }
-
         const authPayload = plainToInstance(
             AuthPayload,
             instanceToPlain(decoded.payload)
         )
 
-        const user = await User.getUser(authPayload.userId)
+        const user = await User.getUser(authPayload.userId.toString())
         if (!user) {
             throw Errors.Unauthorized
         }
 
         const jwtSecret = this.config.jwt.accessSecret
-        try {
-            jwt.verify(token, jwtSecret)
-        } catch (err) {
-            if (err instanceof JsonWebTokenError) {
-                throw Errors.Unauthorized
-            }
-            throw err
-        }
+        jwt.verify(token, jwtSecret)
 
         const cacheKey = CacheKeys.accessToken(authPayload.userId, token)
         const isTokenExisted = await this.cacheManager.exist(cacheKey)
@@ -92,29 +64,25 @@ export class AuthService {
         return authPayload
     }
 
-    async signRefreshToken(payload: AuthPayload, salt?: string) {
+    async signRefreshToken(userId: string) {
         const { refreshSecret, refreshExpiresIn } = this.config.jwt
-        const jwtSecret = refreshSecret + (salt ?? '')
-        const sign = jwt.sign(payload, jwtSecret, {
+        const jwtSecret = refreshSecret
+        const sign = jwt.sign(userId, jwtSecret, {
             expiresIn: refreshExpiresIn,
         })
-        const cacheKey = CacheKeys.refreshToken(payload.userId, sign)
+        const cacheKey = CacheKeys.refreshToken(userId, sign)
         await this.cacheManager.set(
             cacheKey,
             Date.now().toString(),
             refreshExpiresIn
         )
-        return this.generateAuthToken(sign)
+        return sign
     }
 
     async verifyRefreshToken(token: string) {
         const decoded = jwt.decode(token, {
             complete: true,
         })
-        if (!decoded) {
-            throw Errors.Unauthorized
-        }
-
         const authPayload = plainToInstance(
             AuthPayload,
             instanceToPlain(decoded.payload)
@@ -125,66 +93,32 @@ export class AuthService {
             throw Errors.Unauthorized
         }
 
-        const jwtSecret = this.config.jwt.refreshSecret
-        try {
-            jwt.verify(token, jwtSecret)
-        } catch (err) {
-            if (err instanceof JsonWebTokenError) {
-                throw Errors.Unauthorized
-            }
-            throw err
-        }
-
-        const cacheKey = CacheKeys.refreshToken(authPayload.userId, token)
+        const cacheKey = CacheKeys.accessToken(authPayload.userId, token)
         const isTokenExisted = await this.cacheManager.exist(cacheKey)
         if (!isTokenExisted) {
             throw Errors.Unauthorized
         }
 
+        const accessTokenKey = CacheKeys.accessToken(authPayload.userId, token)
+        await Promise.all([
+            this.cacheManager.del(accessTokenKey)
+        ])
+
         return authPayload
     }
 
-    async signOTPToken(phoneNumber: string, otp: string) {
-        const { accessSecret } = this.config.jwt
-        const sign = jwt.sign(
-            {
-                phoneNumber: phoneNumber,
-                otp: otp,
-            },
-            accessSecret
+    async getAccessTokens(userId: string) {
+        const res = await this.cacheManager.hget(
+            CK_ACCESS_TOKEN_KEY,
+            userId.toString()
         )
-        return sign
-    }
-
-    async decodeOTPAccessCode(otpAccessCode: string) {
-        const { accessSecret } = this.config.jwt
-        const decoded = jwt.verify(otpAccessCode, accessSecret, {
-            complete: true,
-        })
-        const otpPayload = plainToInstance(
-            OTPPayload,
-            instanceToPlain(decoded.payload)
-        )
-        return otpPayload
-    }
-
-    private generateAuthToken(sign: string): AuthToken {
-        const decoded = jwt.decode(sign, { complete: true })
-        const decodedPayload = decoded.payload as JwtPayload
-        return {
-            token: sign,
-            expireAt: decodedPayload.exp,
+        if (res != null) {
+            return new Set(res.split(','))
         }
+        return new Set()
     }
 
-    async generateAuthTokenPairs(payload: AuthPayload, salt: string) {
-        const res = await Promise.all([
-            this.signToken(payload, salt),
-            this.signRefreshToken(payload, salt),
-        ])
-        return {
-            accessToken: res[0],
-            refreshToken: res[1],
-        }
+    async verifyInitData(initData: string) {
+        return verifyTelegramWebAppData(initData, this.config.telegramTokenBot)
     }
 }

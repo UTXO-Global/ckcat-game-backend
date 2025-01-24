@@ -2,13 +2,14 @@ import {
     Column,
     Entity,
     EntityManager,
-    ObjectId,
     ObjectIdColumn,
 } from 'typeorm'
 import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
 import { plainToInstance } from 'class-transformer'
 import { TransactionDTO } from '../dtos/transaction.dto'
+import { ObjectId } from 'mongodb';
+
 
 @Entity()
 export class Transaction extends AppBaseEntity {
@@ -22,30 +23,15 @@ export class Transaction extends AppBaseEntity {
     orderId: string
 
     @Column()
-    title: string
-
-    @Column()
-    description: string
-
-    @Column()
-    numberCoin: number
-
+    txHash: string
+    
     @Column()
     price: number
 
     @Column()
-    currency: string
+    status: string
 
-    @Column()
-    providerToken: string
-
-    @Column()
-    telegramPaymentChargeId: string
-
-    @Column()
-    providerPaymentChargeId: string
-
-    static async createTransaction(
+    static async saveTransaction(
         data: TransactionDTO,
         manager: EntityManager = AppDataSource.manager
     ) {
@@ -53,10 +39,59 @@ export class Transaction extends AppBaseEntity {
             excludeExtraneousValues: true,
         })
 
-        await manager.save(
-            Transaction.create({
-                ...createFields,
-            })
-        )
+        const transaction = await this.getTransactionByTXHash(data.txHash);
+        if (!transaction) {
+            return await manager.save(
+                Transaction.create({
+                    ...createFields,
+                })
+            )
+        }
+
+        return await manager.update(Transaction, { _id: transaction._id }, { status: data.status })
+        
+    }
+
+    static async getTransaction(userId: string, transactionId: string) {
+        const id = new ObjectId(transactionId);
+        return await Transaction.findOne({
+            where: {
+                _id: id,
+                userId: userId,
+            },
+        })
+    }
+
+    static async getTransactionById(transactionId: string) {
+        const id = new ObjectId(transactionId);
+        return await Transaction.findOne({
+            where: {
+                _id: id,
+            },
+        })
+    }
+
+    static async getTransactionByTXHash(txHash: string) {
+        return await Transaction.findOne({
+            where: {
+                txHash: txHash,
+            },
+        })
+    }
+    
+    static async getTransactions(userId: string) {
+        return await Transaction.find({
+            where: {
+                userId: userId,
+            },
+        })
+    }
+
+    static async updateStatusTransaction(
+        transactionId: string,
+        status: string,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        await manager.update(Transaction, { _id: transactionId }, { status })
     }
 }

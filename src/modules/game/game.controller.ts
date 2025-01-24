@@ -4,13 +4,11 @@ import { ResponseWrapper } from '../../utils/response'
 import { GameDTO } from '../game/dtos/game.dto'
 import { GameService } from './game.service'
 import { DataRequest } from '../../base/base.request'
-import { AuthRequest } from '../auth/auth.middleware'
+import { CKAuthRequest } from '../auth/auth.middleware'
 
 @Service()
 export class GameController {
-    constructor(
-        @Inject() public gameService: GameService
-    ) {}
+    constructor(@Inject() public gameService: GameService) {}
 
     createGame = async (
         req: DataRequest<GameDTO>,
@@ -19,7 +17,7 @@ export class GameController {
     ) => {
         try {
             const params = req.body
-            params.userId = req.user.id
+            params.userId = req.userId
             const game = await this.gameService.createGame(params)
             res.send(new ResponseWrapper(game))
         } catch (err) {
@@ -28,14 +26,65 @@ export class GameController {
     }
 
     getGameInfo = async (
-        req: AuthRequest,
+        req: CKAuthRequest,
         res: Response,
         next: NextFunction
     ) => {
         try {
-            const { user } = req
+            const { userId } = req
             res.send(
-                new ResponseWrapper(await this.gameService.getGameInfo(user.id))
+                new ResponseWrapper(await this.gameService.getGameInfo(userId))
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    claimWatchVideo = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const userId = req.query.userId as string
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.claimWatchVideo(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    claimWatchAds = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const userId = req.query.userId as string
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.claimWatchAds(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    unlockTraining = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const { userId } = req
+            res.send(
+                new ResponseWrapper(
+                    await this.gameService.unlockTraining(userId)
+                )
             )
         } catch (err) {
             next(err)

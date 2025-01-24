@@ -7,9 +7,4 @@ export class GameDTO extends BaseReqDTO {
 
     @Expose()
     data: string
-
-    init(data: GameDTO) {
-        this.userId = data.userId
-        this.data = data.data
-    }
 }

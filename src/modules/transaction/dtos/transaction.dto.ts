@@ -1,8 +1,7 @@
-import { BaseDTO } from '../../../base/base.dto'
+import { BaseReqDTO } from '../../../base/base.dto'
 import { Expose } from 'class-transformer'
-import { PurchaseReqDTO } from '../../user/dtos/purchase_req.dto'
 
-export class TransactionDTO extends BaseDTO {
+export class TransactionDTO extends BaseReqDTO {
     @Expose()
     userId: string
 
@@ -10,26 +9,11 @@ export class TransactionDTO extends BaseDTO {
     orderId: string
 
     @Expose()
-    title: string
-
-    @Expose()
-    description: string
-
-    @Expose()
-    numberCoin: number
+    txHash: string
 
     @Expose()
     price: number
 
     @Expose()
-    currency: string
-
-    @Expose()
-    providerToken: string
-
-    @Expose()
-    telegramPaymentChargeId: string
-
-    @Expose()
-    providerPaymentChargeId: string
+    status: string
 }

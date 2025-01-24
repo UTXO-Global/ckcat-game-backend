@@ -1,12 +1,8 @@
+import { Router } from 'express'
 import { Inject, Service } from 'typedi'
 import { BaseRoute } from '../../app'
-import { Router } from 'express'
-import { Config } from '../../configs'
-import { TransactionController } from './transaction.controller'
 import { AuthMiddleware } from '../auth/auth.middleware'
-import { transformAndValidate } from '../../utils/validator'
-import { RefundPurchaseStarsReqDTO } from '../user/dtos/refund_purchase_star.dto'
-import { GetStarTransactionReqDTO } from '../user/dtos/get_star_transaction.dto'
+import { TransactionController } from './transaction.controller'
 
 @Service()
 export class TransactionRoute implements BaseRoute {
@@ -14,7 +10,6 @@ export class TransactionRoute implements BaseRoute {
     router: Router = Router()
 
     constructor(
-        @Inject() private config: Config,
         @Inject() private transactionController: TransactionController,
         @Inject() private authMiddleware: AuthMiddleware
     ) {
@@ -22,20 +17,17 @@ export class TransactionRoute implements BaseRoute {
     }
 
     private initRoutes() {
-        this.router.post(
-            '/refund-purchase-stars',
-            transformAndValidate(RefundPurchaseStarsReqDTO),
-            this.transactionController.refundPurchaseStar.bind(
-                this.transactionController
-            )
+
+        this.router.get(
+            '/detail/:transactionId',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            this.transactionController.getTransactionInfo.bind(this.transactionController)
         )
 
         this.router.get(
-            '/get_star_transactions',
-            transformAndValidate(GetStarTransactionReqDTO),
-            this.transactionController.getStarTransactions.bind(
-                this.transactionController
-            )
+            '/transactions',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            this.transactionController.getTransactions.bind(this.transactionController)
         )
     }
 }

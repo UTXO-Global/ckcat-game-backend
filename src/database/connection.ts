@@ -19,7 +19,7 @@ export const AppDataSource = new DataSource({
     url: masterDb.connectionString,
     cache: {
         type: 'ioredis',
-        options: config.redis,
+        options: config.redisUri,
         ignoreErrors: false,
     },
     maxQueryExecutionTime: 10000,

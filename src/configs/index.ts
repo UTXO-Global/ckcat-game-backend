@@ -7,7 +7,6 @@ import {
 } from 'class-validator'
 import Container, { Service } from 'typedi'
 import { Type, plainToInstance } from 'class-transformer'
-import { RedisConfig } from './redis.config'
 import { JwtConfig } from './jwt.config'
 import { MongoDbConfig } from './mongodb.config'
 import { AwsConfig } from './aws.config'
@@ -31,17 +30,13 @@ export class Config {
     @IsNotEmpty()
     port: number
 
-    @IsNumber()
-    @IsNotEmpty()
-    socketPort: number
-
     @ValidateNested()
     @Type(() => MongoDbConfig)
     masterDb: MongoDbConfig
 
-    @ValidateNested()
-    @Type(() => RedisConfig)
-    redis: RedisConfig
+    @IsString()
+    @IsNotEmpty()
+    redisUri: string
 
     @ValidateNested()
     @Type(() => BotConfig)
@@ -76,55 +71,31 @@ export class Config {
 
     @IsString()
     @IsNotEmpty()
-    shareSecret: string
+    ckAddress: string
 
     @IsString()
     @IsNotEmpty()
-    domain: string
-
-    @IsNumber()
-    @IsNotEmpty()
-    payloadTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    proofTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    energyTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    bootsTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    adsBombTTL: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberBomb: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberLightning: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberMoneyShare: number
-
-    @IsNumber()
-    @IsNotEmpty()
-    numberMoneyEarn: number
+    ckbURL: string
 
     @IsString()
     @IsNotEmpty()
-    providerPaymentId: string
+    ckCodeHash: string
 
     @IsString()
     @IsNotEmpty()
-    rpcUrl: string
+    ckHashType: string
+
+    @IsString()
+    @IsNotEmpty()
+    ckArgs: string
+
+    @IsString()
+    @IsNotEmpty()
+    apiUrl: string
+
+    @IsString()
+    @IsNotEmpty()
+    apiKey: string
 
     constructor() {
         const env = process.env
@@ -132,9 +103,8 @@ export class Config {
         this.appEnv = env.APP_ENV
         this.runEnv = env.RUN_ENV
         this.port = parseInt(env.PORT)
-        this.socketPort = parseInt(env.SOCKET_PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
-        this.redis = this.decodeStringObj(env.REDIS)
+        this.redisUri = this.decodeObjToStringRedis(env.REDIS)
         this.bot = this.decodeStringObj(env.BOT)
         this.jwt = this.decodeStringObj(env.JWT)
         this.telegramTokenBot = env.TELEGRAM_BOT_TOKEN
@@ -143,31 +113,27 @@ export class Config {
         this.secretKey = env.SECRET_KEY
         this.ivKey = env.IV_KEY
         this.expireNonce = parseInt(env.EXPIRES_NONCE)
-        this.shareSecret = env.SHARED_SECRET
-        this.domain = env.DOMAIN
-        this.payloadTTL = parseInt(env.PAYLOAD_TTL)
-        this.proofTTL = parseInt(env.PROOF_TTL)
-        this.energyTTL = parseInt(env.ENERGY_TTL)
-        this.bootsTTL = parseInt(env.BOOTS_TTL)
-        this.numberBomb = parseInt(env.NUMBER_BOMB)
-        this.numberLightning = parseInt(env.NUMBER_LIGHTNING)
-        this.numberMoneyShare = parseInt(env.NUMBER_MONEY_SHARE)
-        this.numberMoneyEarn = parseInt(env.NUMBER_MONEY_EARN)
-        this.adsBombTTL = parseInt(env.ADS_BOMB_TTL)
-        this.providerPaymentId = env.PROVIDER_PAYMENT_ID
-        this.rpcUrl = env.RPC_URL
+        this.ckAddress = env.CK_ADDRESS
+        this.ckbURL = env.CKB_URL
+        this.ckCodeHash = env.CK_CODE_HASH
+        this.ckHashType = env.CK_HASH_TYPE
+        this.ckArgs = env.CK_ARGS
+        this.apiUrl = env.API_URL
+        this.apiKey = env.API_KEY
     }
 
     isProductionNodeEnv() {
         return this.nodeEnv === 'production'
     }
 
-    isProductionAppEnv() {
-        return this.appEnv === 'production'
-    }
-
     private decodeStringObj(str: string) {
         return JSON.parse(str.replace(/\\/g, ''))
+    }
+
+    private decodeObjToStringRedis(str: string) {
+        const json = this.decodeStringObj(str)
+        const { host, port } = json
+        return `redis://${host}:${port}`
     }
 }
 

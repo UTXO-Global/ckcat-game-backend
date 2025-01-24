@@ -9,6 +9,7 @@ import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
 import { plainToInstance } from 'class-transformer'
 import { GameDTO } from '../dtos/game.dto'
+import { getNowUtc } from '../../../utils'
 
 @Entity()
 export class Game extends AppBaseEntity {
@@ -25,6 +26,7 @@ export class Game extends AppBaseEntity {
         data: GameDTO,
         manager: EntityManager = AppDataSource.manager
     ) {
+        
         const createFields = plainToInstance(GameDTO, data, {
             excludeExtraneousValues: true,
         })
@@ -44,7 +46,13 @@ export class Game extends AppBaseEntity {
                 })
             )
         }
-        return res;
+
+        await manager.update(Game, { userId: userId }, { data: data.data, updatedAt : getNowUtc()})
+        return await Game.findOne({
+            where: {
+                userId: userId,
+            },
+        })
     }
 
     static async getGame(userId: string) {

@@ -1,21 +1,12 @@
-import {
-    Column,
-    Entity,
-    EntityManager,
-    Index,
-    ObjectIdColumn,
-    PrimaryGeneratedColumn,
-} from 'typeorm'
+import { Column, Entity, EntityManager, ObjectIdColumn } from 'typeorm'
 import { ObjectId } from 'bson'
 import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
 import { UserDTO } from '../dtos/user.dto'
 import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
-import { ResponseWrapper } from '../../../utils/response'
-import Container from 'typedi'
-import { CacheKeys, CacheManager, CacheTimes } from '../../../caches'
-import { LeaderBoardDTO } from '../dtos/leader-board.dto'
+import { GemsDTO } from '../../gems/dtos/gems.dto'
+import { getNowUtc } from '../../../utils'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -35,11 +26,19 @@ export class User extends AppBaseEntity {
     username: string
 
     @Column()
-    coin: number
+    gems: number
 
-    @Index()
-    @Column({ length: 6 })
-    salt: string
+    @Column()
+    unlockTraining: number
+
+    @Column()
+    lastLogin: Date
+
+    @Column()
+    totalPlayingTime: number
+
+    @Column()
+    totalLaunch: number
 
     static async createUser(
         data: UserDTO,
@@ -53,30 +52,13 @@ export class User extends AppBaseEntity {
         const user = await manager.save(
             User.create({
                 ...createFields,
+                unlockTraining: 0,
             })
         )
-        if (createFields) {
-            const cacheManager = Container.get(CacheManager)
-            const catchUser = plainToInstance(UserDTO, user, {
-                excludeExtraneousValues: true,
-            })
-            await cacheManager.setObject(
-                CacheKeys.user(catchUser.id),
-                catchUser,
-                CacheTimes.day(30)
-            )
-            await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
-        }
         return user
     }
 
     static async getUser(id: string) {
-        const cacheManager = Container.get(CacheManager)
-        const cachedUser = await cacheManager.getObject<UserDTO>(
-            CacheKeys.user(id)
-        )
-        if (cachedUser) return cachedUser
-
         const res = await User.findOne({
             where: {
                 id: id,
@@ -87,44 +69,20 @@ export class User extends AppBaseEntity {
             const user = plainToInstance(UserDTO, res, {
                 excludeExtraneousValues: true,
             })
-            await cacheManager.setObject(
-                CacheKeys.user(id),
-                user,
-                CacheTimes.day(30)
-            )
             return user
         }
     }
 
-    static async updateCoin(
-        id: string,
-        numberCoin: number,
+    static async updateGems(
+        data: GemsDTO,
         manager: EntityManager = AppDataSource.manager
     ) {
-        const res = await User.findOne({
-            where: {
-                id: id,
-            },
-        })
-
-        if (!res) {
-            throw Errors.UserIdExisted
-        }
-
-        res.coin += numberCoin
-        await manager.update(User, { id }, { ...res })
-        const cacheManager = Container.get(CacheManager)
-        await cacheManager.del(CacheKeys.user(id))
-        const user = plainToInstance(UserDTO, res, {
-            excludeExtraneousValues: true,
-        })
-        await cacheManager.setObject(
-            CacheKeys.user(id),
-            user,
-            CacheTimes.day(30)
+        const user = await User.getUser(data.userId)
+        await manager.update(
+            User,
+            { id: data.userId },
+            { gems: user.gems + data.gems }
         )
-
-        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
     }
 
     static async validateUserInfo(data: { id?: string }) {
@@ -143,45 +101,15 @@ export class User extends AppBaseEntity {
         }
     }
 
-    static async getLeaderBoard(userId: string) {
-        const cacheManager = Container.get(CacheManager)
-        const ids: string[] = await cacheManager.getLeaderBoardWithTop(
-            CacheKeys.leaderBoard(),
-            9
-        )
-        const res: LeaderBoardDTO[] = []
-        for (const id of ids) {
-            const user = await this.getUser(id)
-            if (user) {
-                const lD = new LeaderBoardDTO()
-                lD.firstName = user.firstName
-                lD.lastName = user.lastName
-                lD.username = user.username
-                lD.coin = user.coin
-                lD.rank = ids.indexOf(id) + 1
-                res.push(lD)
-            }
-        }
-        const lD = new LeaderBoardDTO()
-        const user = await this.getUser(userId)
-        lD.firstName = user.firstName
-        lD.lastName = user.lastName
-        lD.username = user.username
-        lD.coin = user.coin
-        lD.rank =
-            (await cacheManager.getUserRank(CacheKeys.leaderBoard(), userId)) +
-            1
-        return {
-            user: lD,
-            leaderBoard: res,
-        }
-    }
-
-    static async updateCoinToRedisLeaderBoard() {
-        const users: User[] = await User.find()
-        const cacheManager = Container.get(CacheManager)
-        for (const user of users) {
-            await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, user.coin)
-        }
+    static async updateUser(
+        data: User | UserDTO,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        data.updatedAt = getNowUtc()
+        await manager.update(User, { id: data.id }, { ...data })
+        const user = plainToInstance(UserDTO, data, {
+            excludeExtraneousValues: true,
+        })
+        return user
     }
 }

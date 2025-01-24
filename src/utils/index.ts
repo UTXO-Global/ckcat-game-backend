@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { differenceInSeconds } from 'date-fns'
 import { Message } from 'telegraf/typings/core/types/typegram'
 
@@ -229,4 +230,33 @@ export const extractWalletId = (url: string): string | null => {
         return tokenParam[1]
     }
     return null
+}
+
+export const parseHexToString = (hex: string): string => {
+    // Hexadecimal string with 0x prefix
+    const hexString = hex
+
+    // Remove the "0x" prefix and decode
+    const cleanHex = hexString.slice(2) // Remove '0x'
+    const buffer = Buffer.from(cleanHex, 'hex')
+    const decodedString = buffer.toString('utf8')
+    return decodedString
+}
+
+export const parsePrice = (hex: string): number => {
+    const hexValue = hex
+    const decimalValue = parseInt(hexValue, 16)
+    return decimalValue / 100000000
+}
+
+export const randomID = () => {
+    return randomUUID().replace(/-/g, '')
+}
+
+export const splitChunks = <T>(source: T[], size: number) => {
+    const chunks: T[][] = []
+    for (let i = 0; i < source.length; i += size) {
+        chunks.push(source.slice(i, i + size))
+    }
+    return chunks
 }

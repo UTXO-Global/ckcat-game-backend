@@ -15,5 +15,17 @@ export class UserDTO extends BaseDTO {
     username: string
 
     @Expose()
-    coin: number
+    gems: number
+
+    @Expose()
+    unlockTraining: number
+
+    @Expose()
+    lastLogin: Date
+
+    @Expose()
+    totalPlayingTime: number
+
+    @Expose()
+    totalLaunch: number
 }

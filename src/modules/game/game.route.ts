@@ -21,13 +21,29 @@ export class GameRoute implements BaseRoute {
     private initRoutes() {
         this.router.post(
             '/create-game',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.createGame.bind(this.gameController)
         )
         this.router.get(
             '/game-info',
-            this.authMiddleware.authorizeTelegram.bind(this.authMiddleware),
+            this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.getGameInfo.bind(this.gameController)
+        )
+        //claim gems when watch video
+        this.router.get(
+            '/claim/watch-video',
+            this.gameController.claimWatchVideo.bind(this.gameController)
+        )
+        //claim gems when watch ads
+        this.router.get(
+            '/claim/watch-ads',
+            this.gameController.claimWatchAds.bind(this.gameController)
+        )
+        // unlock training cat
+        this.router.post(
+            '/unlock-training',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            this.gameController.unlockTraining.bind(this.gameController)
         )
     }
 }
