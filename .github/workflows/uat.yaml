@@ -2,12 +2,12 @@ name: Release
 
 on:
   push:
-    branches: [uat]
+    branches: [prod]
 
 env:
   CURRENT_SERVICE: ${{ github.event.repository.name }}
   AWS_ECR_URI: 604313529175.dkr.ecr.ap-southeast-1.amazonaws.com
-  NAMESPACE: staging
+  NAMESPACE: uat
   ZONE: ap-southeast-1
   AWS_ACCOUNT_ID: 604313529175
 
@@ -38,8 +38,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ env.AWS_ECR_URI }}/${{ env.CURRENT_SERVICE }}:uat
-          cache-from: type=registry,ref=${{ env.AWS_ECR_URI }}/${{ env.CURRENT_SERVICE }}:uat
+          tags: ${{ env.AWS_ECR_URI }}/${{ env.CURRENT_SERVICE }}:${{ env.NAMESPACE }}
+          cache-from: type=registry,ref=${{ env.AWS_ECR_URI }}/${{ env.CURRENT_SERVICE }}:${{ env.NAMESPACE }}
           cache-to: type=inline
 
   rollout:
