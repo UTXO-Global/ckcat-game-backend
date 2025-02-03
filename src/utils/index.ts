@@ -101,7 +101,7 @@ export const decrypt = (
     const crypto = require('crypto')
     // Convert secretKey and ivKey to Buffer
     const key = crypto.createHash('sha256').update(secretKey).digest()
-    const iv = config.isProductionNodeEnv()
+    const iv = config.isProductionRunEnv()
         ? getValidIV(ivKey)
         : Buffer.from(ivKey, 'hex')
 

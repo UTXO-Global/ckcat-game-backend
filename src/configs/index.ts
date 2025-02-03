@@ -126,6 +126,10 @@ export class Config {
         return this.nodeEnv === 'production'
     }
 
+    isProductionRunEnv() {
+        return this.runEnv !== 'develop'
+    }
+
     private decodeStringObj(str: string) {
         return JSON.parse(str.replace(/\\/g, ''))
     }
