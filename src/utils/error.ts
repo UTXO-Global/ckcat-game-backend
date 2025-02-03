@@ -2,6 +2,7 @@ import { Expose, plainToInstance } from 'class-transformer'
 import { Response } from 'express'
 import { logger } from './logger'
 import { ResponseWrapper } from './response'
+import { error } from 'winston'
 
 export class ErrorResp extends Error {
     @Expose()
@@ -96,6 +97,37 @@ export const Errors = {
         'Internal Service Error'
     ),
     GameNotFound: new ErrorResp('error.gameNotFound', 'Game Not Found'),
+    AdminNotFound: new ErrorResp('error.adminNotFound', 'Admin Not Found'),
+    EndMustGreaterThanStart: new ErrorResp(
+        'error.endMustGreaterThanStart',
+        'End must greater than start'
+    ),
+    GameAirdropNotFound: new ErrorResp(
+        'error.gameAirdropNotFound',
+        'Game Airdrop Not Found'
+    ),
+    AirdropClosed: new ErrorResp('error.airdropClosed', 'Airdrop Closed'),
+    WalletAddressNotFound: new ErrorResp(
+        'error.walletAddressNotFound',
+        'Wallet Address Not Found'
+    ),
+    WalletTypeNotSupport: new ErrorResp(
+        'error.walletTypeNotSupport',
+        'Wallet Type Not Support'
+    ),
+    MaxParticipationReached: new ErrorResp(
+        'error.maxParticipationReached',
+        'Max Participation Reached'
+    ),
+    BotSettingNotFound: new ErrorResp(
+        'erorr.botSettingNotFound',
+        'Bot Setting Not Found'
+    ),
+    UserNotMatch: new ErrorResp('error.userNotMatch', 'User Not Match'),
+    InvalidGameData: new ErrorResp(
+        'error.invalidGameData',
+        'Invalid Game Data'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {

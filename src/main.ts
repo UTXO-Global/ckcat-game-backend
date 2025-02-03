@@ -14,6 +14,11 @@ import { WalletRoute } from './modules/wallet/wallet.route'
 import { ItemRoute } from './modules/item/item.route'
 import { InternalRoute } from './modules/internal/internal.route'
 import { GameSessionRoute } from './modules/game-session/game-session.route'
+import { AdminRoute } from './modules/admin/admin.route'
+import { UserAdminRoute } from './modules/user/admin/user-admin.route'
+import { DashboardRoute } from './modules/dashboard/dashboard.route'
+import { GameAirdropAdminRoute } from './modules/game-airdrop/admin/game-airdrop-admin.route'
+import { GameAirdropRoute } from './modules/game-airdrop/game-airdrop.route'
 
 const app = new App(config, [
     {
@@ -34,6 +39,18 @@ const app = new App(config, [
             ItemRoute,
             InternalRoute,
             GameSessionRoute,
+            GameAirdropRoute,
+        ],
+        groups: [
+            {
+                group: 'admin',
+                routes: [
+                    AdminRoute,
+                    UserAdminRoute,
+                    DashboardRoute,
+                    GameAirdropAdminRoute,
+                ],
+            },
         ],
     },
 ])

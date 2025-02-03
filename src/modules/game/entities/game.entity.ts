@@ -70,13 +70,8 @@ export class Game extends AppBaseEntity {
         })
     }
 
-    static async decryptedGameData(userId: string) {
+    static async decryptedGameData(data: string) {
         try {
-            // Fetch the game data by userId
-            const game = await Game.findOne({ where: { userId } })
-            if (!game) {
-                throw Errors.GameNotFound
-            }
             const config = Container.get(Config)
 
             // Extract the secret key and IV key
@@ -84,7 +79,7 @@ export class Game extends AppBaseEntity {
 
             // Decrypt the game data
             const decryptedData = decryptData(
-                game.data,
+                data,
                 secretKeyDecrypt,
                 ivKeyDecrypt
             )
@@ -101,17 +96,9 @@ export class Game extends AppBaseEntity {
             const parsedData = JSON.parse(decodedData)
             const totalItems = parsedData?.items.length
 
-            // Extract the BossCount
-            const bossCountItem = parsedData?.items.find(
-                (item: any) => item.key === 'BossCount'
-            )
-
-            const bossCount = bossCountItem ? bossCountItem.valueInt : 0
-
-            return bossCount
+            return { parsedData, totalItems }
         } catch (error) {
-            console.error('Error during data decryption and validation:', error)
-            throw new Error('Invalid game data')
+            throw Errors.InvalidGameData
         }
     }
 }

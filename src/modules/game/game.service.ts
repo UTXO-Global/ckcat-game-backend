@@ -19,6 +19,14 @@ export class GameService {
     ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
+            const decrypt = await this.decryptedGameData(data.data)
+            const items = decrypt?.parsedData?.items?.find(
+                (item) => item?.key === 'UserID'
+            )
+            if (!items || items.valueString !== data.userId) {
+                throw Errors.UserNotMatch
+            }
+
             return await Game.createGame(
                 plainToInstance(GameDTO, data),
                 manager
@@ -98,12 +106,15 @@ export class GameService {
         })
     }
 
-    private async decryptedGameData(userId: string) {
-        return await Game.decryptedGameData(userId)
+    private async decryptedGameData(data: string) {
+        return await Game.decryptedGameData(data)
     }
 
     async getData(userId: string) {
-        const decryptData = await this.decryptedGameData(userId)
+        const game = await Game.getGame(userId)
+        if (!game) throw Errors.GameNotFound
+
+        const decryptData = await this.decryptedGameData(game.data)
         return { userId, bossCount: decryptData }
     }
 }
