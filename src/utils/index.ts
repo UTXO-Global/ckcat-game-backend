@@ -1,6 +1,7 @@
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { differenceInSeconds } from 'date-fns'
 import { Message } from 'telegraf/typings/core/types/typegram'
+import { config } from '../configs'
 
 export const generateRandomString = (
     length: number,
@@ -100,7 +101,9 @@ export const decrypt = (
     const crypto = require('crypto')
     // Convert secretKey and ivKey to Buffer
     const key = crypto.createHash('sha256').update(secretKey).digest()
-    const iv = Buffer.from(ivKey, 'hex')
+    const iv = config.isProductionRunEnv()
+        ? getValidIV(ivKey)
+        : Buffer.from(ivKey, 'hex')
 
     // Create decipher object
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
@@ -259,4 +262,26 @@ export const splitChunks = <T>(source: T[], size: number) => {
         chunks.push(source.slice(i, i + size))
     }
     return chunks
+}
+
+export const getValidIV = (input: string): Buffer => {
+    const fixedString = fixIV(input)
+    return generateValidIV(fixedString)
+}
+
+export const fixIV = (input: string): string => {
+    const requiredLength = 16
+    if (input.length < requiredLength) {
+        input = input.padEnd(requiredLength, '0')
+    } else if (input.length > requiredLength) {
+        input = input.substring(0, requiredLength)
+    }
+    return input
+}
+
+export const generateValidIV = (input: string): Buffer => {
+    const hash = createHash('sha256').update(input, 'utf8').digest()
+    const iv = Buffer.alloc(16)
+    hash.copy(iv, 0, 0, 16)
+    return iv
 }
