@@ -94,7 +94,7 @@ export class UserService {
             dailyReward,
             slot,
             walletAddress: wallet?.address || '',
-            paymentAddress: config.ckAddress,
+            paymentAddress: config.ckbAddress,
         }
     }
 }
