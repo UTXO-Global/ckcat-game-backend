@@ -19,10 +19,7 @@ import { logger } from './utils/logger'
 import expressBasicAuth from 'express-basic-auth'
 import { serverAdapter } from './modules/queue/queue.service'
 
-import {
-    packageCronService,
-    transactionCrawlService,
-} from './services'
+import { packageCronService, transactionCrawlService } from './services'
 
 import { redisService } from './modules/redis/redis.service'
 
@@ -39,7 +36,6 @@ export interface AppRoute {
     }[]
     routes?: ClassConstructor<BaseRoute>[]
 }
-
 
 export class App {
     private app = express()
@@ -74,13 +70,15 @@ export class App {
             })
         )
 
-        this.app.use('/admin/queues', expressBasicAuth({
-            challenge: true,
-            users: { admin: this.config.basicAuthPassword },
-        }), serverAdapter.getRouter())
+        this.app.use(
+            '/admin/queues',
+            expressBasicAuth({
+                challenge: true,
+                users: { admin: this.config.basicAuthPassword },
+            }),
+            serverAdapter.getRouter()
+        )
     }
-
-    
 
     private initRoutes(routes: AppRoute[]) {
         routes.forEach((route) => {
@@ -128,8 +126,7 @@ export class App {
 
         this.app.listen(this.config.port, () => {
             return logger.info(
-                `Server is listening at port ${
-                    this.config.port
+                `Server is listening at port ${this.config.port
                 } - Elapsed time: ${(Date.now() - start) / 1000}s`
             )
         })
