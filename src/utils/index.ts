@@ -101,9 +101,7 @@ export const decrypt = (
     const crypto = require('crypto')
     // Convert secretKey and ivKey to Buffer
     const key = crypto.createHash('sha256').update(secretKey).digest()
-    const iv = config.isProductionRunEnv()
-        ? getValidIV(ivKey)
-        : Buffer.from(ivKey, 'hex')
+    const iv = getValidIV(ivKey)
 
     // Create decipher object
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv)
