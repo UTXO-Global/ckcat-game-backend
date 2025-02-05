@@ -9,8 +9,6 @@ import Container, { Service } from 'typedi'
 import { Type, plainToInstance } from 'class-transformer'
 import { JwtConfig } from './jwt.config'
 import { MongoDbConfig } from './mongodb.config'
-import { AwsConfig } from './aws.config'
-import { BotConfig } from './bot.config'
 
 @Service()
 export class Config {
@@ -39,10 +37,6 @@ export class Config {
     redisUri: string
 
     @ValidateNested()
-    @Type(() => BotConfig)
-    bot: BotConfig
-
-    @ValidateNested()
     @Type(() => JwtConfig)
     jwt: JwtConfig
 
@@ -53,10 +47,6 @@ export class Config {
     @IsString()
     basicAuthPassword: string
 
-    @ValidateNested()
-    @Type(() => AwsConfig)
-    awsConfig: AwsConfig
-
     @IsString()
     @IsNotEmpty()
     secretKey: string
@@ -65,29 +55,13 @@ export class Config {
     @IsNotEmpty()
     ivKey: string
 
-    @IsNumber()
-    @IsNotEmpty()
-    expireNonce: number
-
     @IsString()
     @IsNotEmpty()
-    ckAddress: string
+    ckbAddress: string
 
     @IsString()
     @IsNotEmpty()
     ckbURL: string
-
-    @IsString()
-    @IsNotEmpty()
-    ckCodeHash: string
-
-    @IsString()
-    @IsNotEmpty()
-    ckHashType: string
-
-    @IsString()
-    @IsNotEmpty()
-    ckArgs: string
 
     @IsString()
     @IsNotEmpty()
@@ -105,19 +79,13 @@ export class Config {
         this.port = parseInt(env.PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
         this.redisUri = this.decodeObjToStringRedis(env.REDIS)
-        this.bot = this.decodeStringObj(env.BOT)
         this.jwt = this.decodeStringObj(env.JWT)
         this.telegramTokenBot = env.TELEGRAM_BOT_TOKEN
         this.basicAuthPassword = env.BASIC_AUTH_PASSWORD
-        this.awsConfig = this.decodeStringObj(env.AWS_CREDENTIALS)
         this.secretKey = env.SECRET_KEY
         this.ivKey = env.IV_KEY
-        this.expireNonce = parseInt(env.EXPIRES_NONCE)
-        this.ckAddress = env.CK_ADDRESS
+        this.ckbAddress = env.CKB_ADDRESS
         this.ckbURL = env.CKB_URL
-        this.ckCodeHash = env.CK_CODE_HASH
-        this.ckHashType = env.CK_HASH_TYPE
-        this.ckArgs = env.CK_ARGS
         this.apiUrl = env.API_URL
         this.apiKey = env.API_KEY
     }
