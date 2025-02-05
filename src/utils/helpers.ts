@@ -1,8 +1,7 @@
-import { parseAddress } from '@ckb-lumos/helpers'
-
+import { addressToScript } from '@nervosnetwork/ckb-sdk-utils'
 export const parseCKBAddress = (address: string) => {
     try {
-        return parseAddress(address)
+        return addressToScript(address)
     } catch (error) {
         console.error('Invalid CKB address from config:', error.message)
     }
