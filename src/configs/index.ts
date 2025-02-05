@@ -20,10 +20,6 @@ export class Config {
     @IsNotEmpty()
     appEnv: string
 
-    @IsString()
-    @IsNotEmpty()
-    runEnv: string
-
     @IsNumber()
     @IsNotEmpty()
     port: number
@@ -75,7 +71,6 @@ export class Config {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
         this.appEnv = env.APP_ENV
-        this.runEnv = env.RUN_ENV
         this.port = parseInt(env.PORT)
         this.masterDb = this.decodeStringObj(env.MASTER_DB)
         this.redisUri = this.decodeObjToStringRedis(env.REDIS)
@@ -92,10 +87,6 @@ export class Config {
 
     isProductionNodeEnv() {
         return this.nodeEnv === 'production'
-    }
-
-    isProductionRunEnv() {
-        return this.runEnv !== 'develop'
     }
 
     private decodeStringObj(str: string) {
