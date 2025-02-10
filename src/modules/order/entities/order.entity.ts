@@ -17,6 +17,9 @@ export class Order extends AppBaseEntity {
     _id: ObjectId
 
     @Column()
+    orderId: string
+
+    @Column()
     userId: string
 
     @Column()
@@ -27,6 +30,7 @@ export class Order extends AppBaseEntity {
 
     @Column()
     status: string
+
 
     static async createOrder(
         data: OrderDTO,
@@ -44,11 +48,12 @@ export class Order extends AppBaseEntity {
     }
 
     static async getOrder(userId: string, orderId: string) {
-        const id = new ObjectId(orderId);
+        // const id = new ObjectId(orderId);
         return await Order.findOne({
             where: {
                 userId: userId,
-                _id: id,
+                // _id: id,
+                orderId
             },
         })
     }
@@ -74,10 +79,11 @@ export class Order extends AppBaseEntity {
     }
 
     static async getOrderById(orderId: string) {
-        const id = new ObjectId(orderId);
+        // const id = new ObjectId(orderId);
         return await Order.findOne({
             where: {
-                _id: id,
+                // _id: id,
+                orderId
             },
         })
     }
@@ -87,7 +93,7 @@ export class Order extends AppBaseEntity {
         status: string,
         manager: EntityManager = AppDataSource.manager
     ) {
-        const id = new ObjectId(orderId);
-        await manager.update(Order, { _id: id }, { status })
+        // const id = new ObjectId(orderId);
+        await manager.update(Order, { orderId }, { status })
     }
 }

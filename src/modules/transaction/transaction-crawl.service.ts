@@ -111,9 +111,9 @@ export class TransactionsCrawlService {
                 const outputsData = transactionDetail.transaction.outputs_data
 
                 let orderId = parseHexToString(outputsData[1])
-                if (!ObjectId.isValid(orderId)) {
-                    continue
-                }
+                // if (!ObjectId.isValid(orderId)) {
+                //     continue
+                // }
                 let order = await Order.getOrderById(orderId)
 
                 if (
@@ -135,7 +135,7 @@ export class TransactionsCrawlService {
                     await Transaction.saveTransaction(
                         {
                             userId: order.userId,
-                            orderId: order._id.toString(),
+                            orderId: order.orderId,
                             txHash: transaction.out_point.tx_hash,
                             price: packageModel.price,
                             status: transactionDetail.tx_status.status,
@@ -143,7 +143,7 @@ export class TransactionsCrawlService {
                         manager
                     )
                     await Order.updateOrderStatus(
-                        order._id.toString(),
+                        order.orderId,
                         transactionDetail.tx_status.status,
                         manager
                     )
@@ -167,7 +167,7 @@ export class TransactionsCrawlService {
                             {
                                 userId: order.userId,
                                 packageId: packageId,
-                                orderId: order._id.toString(),
+                                orderId: order.orderId,
                                 purchaseID: packageModel.purchaseID,
                                 expired: 0,
                             },

@@ -8,7 +8,7 @@ export const generateRandomString = (
     type: 'default' | 'number' = 'default'
 ): string => {
     let characters =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     if (type === 'number') {
         characters = '0123456789'
     }
