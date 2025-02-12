@@ -5,6 +5,7 @@ import { GameDTO } from '../game/dtos/game.dto'
 import { GameService } from './game.service'
 import { DataRequest } from '../../base/base.request'
 import { CKAuthRequest } from '../auth/auth.middleware'
+import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
 
 @Service()
 export class GameController {
@@ -100,6 +101,20 @@ export class GameController {
             const { userId } = req
             res.send(
                 new ResponseWrapper(await this.gameService.getData(userId))
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    getListGameReward = async (
+        req: DataRequest<GameRewardGetListReqDTO>,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            res.send(
+                new ResponseWrapper(await this.gameService.getListGameReward(req.data))
             )
         } catch (err) {
             next(err)

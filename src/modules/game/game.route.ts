@@ -4,6 +4,8 @@ import { BaseRoute } from '../../app'
 import { AuthMiddleware } from '../auth/auth.middleware'
 import { GameController } from './game.controller'
 import { Config } from '../../configs'
+import { transformAndValidate } from '../../utils/validator'
+import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
 
 @Service()
 export class GameRoute implements BaseRoute {
@@ -50,6 +52,13 @@ export class GameRoute implements BaseRoute {
             '/data',
             this.authMiddleware.authorization.bind(this.authMiddleware),
             this.gameController.getDecryptedGameData.bind(this.gameController)
+        )
+
+        this.router.get(
+            '/rewards',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            transformAndValidate(GameRewardGetListReqDTO),
+            this.gameController.getListGameReward.bind(this.gameController)
         )
     }
 }

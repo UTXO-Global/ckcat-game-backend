@@ -10,6 +10,8 @@ import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
 import { Config } from '../../configs'
+import { GameReward } from './entities/game-reward.entity'
+import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
 
 @Service()
 export class GameService {
@@ -19,13 +21,31 @@ export class GameService {
     ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
-            const decrypt = await this.decryptedGameData(data.data)
-            const items = decrypt?.parsedData?.items?.find(
+            const decrypted = await this.decryptedGameData(data.data)
+            const userItem = decrypted?.parsedData?.items?.find(
                 (item) => item?.key === 'UserID'
             )
-            if (!items || items.valueString !== data.userId) {
+            console.log(userItem)
+            const levelBossItem = decrypted?.parsedData?.items?.find(
+                (item) => item?.key === 'BeastHigest'
+            )
+            console.log(levelBossItem)
+            if (!userItem || userItem.valueString !== data.userId) {
                 throw Errors.UserNotMatch
             }
+
+
+            // Kiểm tra levelBoss
+            if (levelBossItem && levelBossItem.valueInt === 4) {
+                await GameReward.createGameReward(
+                    {
+                        userId: data.userId,
+                        level: levelBossItem.valueInt,
+                    },
+                    manager
+                )
+            }
+
 
             return await Game.createGame(
                 plainToInstance(GameDTO, data),
@@ -116,5 +136,10 @@ export class GameService {
 
         const decryptData = await this.decryptedGameData(game.data)
         return { userId, bossCount: decryptData }
+    }
+
+    async getListGameReward(data: GameRewardGetListReqDTO){
+        const {limitNumber} = data
+        return GameReward.getListGameReward(limitNumber)
     }
 }

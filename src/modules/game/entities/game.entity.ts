@@ -1,3 +1,4 @@
+import { config } from './../../../configs/index';
 import {
     Column,
     Entity,
@@ -74,14 +75,11 @@ export class Game extends AppBaseEntity {
         try {
             const config = Container.get(Config)
 
-            // Extract the secret key and IV key
-            const { secretKeyDecrypt, ivKeyDecrypt } = config.decryptDataConfig
-
             // Decrypt the game data
             const decryptedData = decryptData(
                 data,
-                secretKeyDecrypt,
-                ivKeyDecrypt
+                config.secretKey,
+                config.ivKey
             )
 
             // Decode Base64 string to UTF-8

@@ -1,7 +1,5 @@
 import { TransformFnParams } from 'class-transformer'
-import { S3Storage } from '../storages/s3.storage'
-import Container from 'typedi'
-import { isURL } from 'class-validator'
+
 
 export const ToBoolean = (param: TransformFnParams) => {
     if (param.value !== undefined) {
@@ -119,14 +117,6 @@ export const ToIsoDate = (param: TransformFnParams) => {
     ) {
         return param.value.substring(0, 10)
     }
-}
-
-export const ToS3Url = (param: TransformFnParams) => {
-    if (typeof param.value === 'string' && !isURL(encodeURI(param.value))) {
-        return Container.get(S3Storage).getUrl(param.value)
-    }
-
-    return param.value
 }
 
 export const ToUniqueArray = (param: TransformFnParams) => {
