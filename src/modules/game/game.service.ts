@@ -11,7 +11,8 @@ import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
 import { Config } from '../../configs'
 import { GameReward } from './entities/game-reward.entity'
-import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
+import { GameRewardUpdateReqDTO } from './dtos/game-reward-update.dto'
+import { DataReqDTO } from '../../base/base.dto'
 
 @Service()
 export class GameService {
@@ -25,18 +26,17 @@ export class GameService {
             const userItem = decrypted?.parsedData?.items?.find(
                 (item) => item?.key === 'UserID'
             )
-            console.log(userItem)
             const levelBossItem = decrypted?.parsedData?.items?.find(
                 (item) => item?.key === 'BeastHigest'
             )
-            console.log(levelBossItem)
+            console.log(this.config.conditionReward)
             if (!userItem || userItem.valueString !== data.userId) {
                 throw Errors.UserNotMatch
             }
 
 
             // Kiểm tra levelBoss
-            if (levelBossItem && levelBossItem.valueInt === 4) {
+            if (levelBossItem && levelBossItem.valueInt === this.config.conditionReward) {
                 await GameReward.createGameReward(
                     {
                         userId: data.userId,
@@ -138,8 +138,11 @@ export class GameService {
         return { userId, bossCount: decryptData }
     }
 
-    async getListGameReward(data: GameRewardGetListReqDTO){
-        const {limitNumber} = data
-        return GameReward.getListGameReward(limitNumber)
+    async getListGameReward(data: DataReqDTO){
+        return GameReward.getListGameReward(data)
+    }
+
+    async updateGameReward(data: GameRewardUpdateReqDTO){ 
+        return GameReward.updateGameRewardsBulk(data)
     }
 }

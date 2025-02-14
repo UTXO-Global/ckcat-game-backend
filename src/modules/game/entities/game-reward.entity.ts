@@ -4,6 +4,8 @@ import { AppBaseEntity } from "../../../base/base.entity"
 import { GameRewardDTO } from "../dtos/game-reward.dto"
 import { plainToInstance } from 'class-transformer';
 import { level } from 'winston';
+import { GameRewardUpdateReqDTO } from '../dtos/game-reward-update.dto';
+import { DataReqDTO } from '../../../base/base.dto';
 
 @Entity()
 export class GameReward extends AppBaseEntity {
@@ -47,17 +49,18 @@ export class GameReward extends AppBaseEntity {
         )
     }
 
-    static async getListGameReward(limit?: number){
+    static async getListGameReward(data: DataReqDTO){
+        const {pagination} = data
         const repo = AppDataSource.getMongoRepository(GameReward);
     
         const pipeline: any[] = [];
     
-        const limitNumber = limit ? limit : 10 
+        const skip = (pagination.page - 1) * pagination.limit
+
 
         pipeline.push(
             { $match: { isReward: false}},
             { $sort: { createdAt: -1 } },
-            { $limit: limitNumber },
             {
                 $lookup: {
                     from: 'user',
@@ -76,11 +79,40 @@ export class GameReward extends AppBaseEntity {
                     isReward: 1,
                     createdAt: 1
                 }
-            }
+            },
+            { $skip: skip},
+            { $limit: pagination.limit }
+
         );
     
-        return await repo.aggregate(pipeline).toArray();
+        const list =  await repo.aggregate(pipeline).toArray();
+        pagination.total = list.length
+
+        return {
+            list, 
+            pagination
+        }
+    }
+    
+
+    static async  updateGameRewardsBulk(data: GameRewardUpdateReqDTO) {
+        const { userIds } = data;
+        if (!userIds.length) return { updatedCount: 0 };
+    
+        const repo = AppDataSource.getMongoRepository(GameReward);
+    
+        const bulkOps = userIds.map(userId => ({
+            updateOne: {
+                filter: { userId },
+                update: { $set: { isReward: true } }
+            }
+        }));
+    
+        const result = await repo.bulkWrite(bulkOps);
+        return { updatedCount: result.modifiedCount };
     }
     
 
 }
+
+

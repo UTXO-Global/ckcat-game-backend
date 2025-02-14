@@ -67,6 +67,10 @@ export class Config {
     @IsNotEmpty()
     apiKey: string
 
+    @IsNumber()
+    @IsNotEmpty()
+    conditionReward: number 
+
     constructor() {
         const env = process.env
         this.nodeEnv = env.NODE_ENV
@@ -83,6 +87,7 @@ export class Config {
         this.ckbURL = env.CKB_URL
         this.apiUrl = env.API_URL
         this.apiKey = env.API_KEY
+        this.conditionReward = parseInt(env.CONDITION_REWARD)
     }
 
     isProductionNodeEnv() {
