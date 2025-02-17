@@ -1,4 +1,6 @@
 import {
+    ArrayNotEmpty,
+    IsArray,
     IsNotEmpty,
     IsNumber,
     IsString,
@@ -67,9 +69,10 @@ export class Config {
     @IsNotEmpty()
     apiKey: string
 
-    @IsNumber()
-    @IsNotEmpty()
-    conditionReward: number 
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsNumber({}, { each: true })
+    conditionReward: number[]
 
     constructor() {
         const env = process.env
@@ -87,7 +90,9 @@ export class Config {
         this.ckbURL = env.CKB_URL
         this.apiUrl = env.API_URL
         this.apiKey = env.API_KEY
-        this.conditionReward = parseInt(env.CONDITION_REWARD)
+        this.conditionReward = this.decodeStringToNumberArray(
+            env.CONDITION_REWARD
+        )
     }
 
     isProductionNodeEnv() {
@@ -102,6 +107,15 @@ export class Config {
         const json = this.decodeStringObj(str)
         const { host, port } = json
         return `redis://${host}:${port}`
+    }
+
+    private decodeStringToNumberArray(value: string): number[] {
+        return value
+            ? value
+                  .split(',')
+                  .map((num) => Number(num.trim()))
+                  .filter((num) => !isNaN(num))
+            : []
     }
 }
 

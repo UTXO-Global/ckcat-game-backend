@@ -31,11 +31,10 @@ export class GameService {
             if (!userItem || userItem.valueString !== data.userId) {
                 throw Errors.UserNotMatch
             }
-
             //Check level boss
             if (
                 levelBossItem &&
-                levelBossItem.valueInt + 1 === this.config.conditionReward
+                this.config.conditionReward.includes(levelBossItem.valueInt + 1)
             ) {
                 await GameReward.createGameReward(
                     {

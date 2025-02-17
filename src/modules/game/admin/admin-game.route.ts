@@ -4,8 +4,8 @@ import { Router } from 'express'
 import { AuthAdminMiddleware } from '../../admin/auth/auth-admin.middleware'
 import { AdminGameController } from './admin-game.controller'
 import { transformAndValidate } from '../../../utils/validator'
-import { DataReqDTO } from '../../../base/base.dto'
 import { GameRewardUpdateReqDTO } from './dtos/game-reward-update.dto'
+import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
 
 @Service()
 export class AdminGameRoute implements BaseRoute {
@@ -23,7 +23,7 @@ export class AdminGameRoute implements BaseRoute {
         this.router.get(
             '/rewards',
             this.authAdminMiddleware.authorize.bind(this.authAdminMiddleware),
-            transformAndValidate(DataReqDTO),
+            transformAndValidate(GameRewardGetListReqDTO),
             this.adminGameController.getListGameReward.bind(
                 this.adminGameController
             )

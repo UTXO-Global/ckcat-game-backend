@@ -5,13 +5,14 @@ import { DataReqDTO } from '../../../base/base.dto'
 import { NextFunction, Response } from 'express'
 import { ResponseWrapper } from '../../../utils/response'
 import { GameRewardUpdateReqDTO } from './dtos/game-reward-update.dto'
+import { GameRewardGetListReqDTO } from './dtos/game-reward-get-list.dto'
 
 @Service()
 export class AdminGameController {
     constructor(@Inject() private adminGameService: AdminGameService) {}
 
     getListGameReward = async (
-        req: DataRequest<DataReqDTO>,
+        req: DataRequest<GameRewardGetListReqDTO>,
         res: Response,
         next: NextFunction
     ) => {

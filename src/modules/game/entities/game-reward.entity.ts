@@ -12,6 +12,7 @@ import { plainToInstance } from 'class-transformer'
 import { GameRewardUpdateReqDTO } from '../admin/dtos/game-reward-update.dto'
 import { DataReqDTO } from '../../../base/base.dto'
 import { getNowUtc } from '../../../utils'
+import { GameRewardGetListReqDTO } from '../admin/dtos/game-reward-get-list.dto'
 
 @Entity()
 export class GameReward extends AppBaseEntity {
@@ -54,8 +55,8 @@ export class GameReward extends AppBaseEntity {
         )
     }
 
-    static async getListGameReward(data: DataReqDTO) {
-        const { pagination } = data
+    static async getListGameReward(data: GameRewardGetListReqDTO) {
+        const { pagination, level } = data
         const repo = AppDataSource.getMongoRepository(GameReward)
 
         const pipeline: any[] = []
@@ -63,7 +64,7 @@ export class GameReward extends AppBaseEntity {
         const skip = (pagination.page - 1) * pagination.limit
 
         pipeline.push(
-            { $match: { isReward: false } },
+            { $match: { isReward: false, level } },
             { $sort: { createdAt: -1 } },
             {
                 $lookup: {
@@ -89,7 +90,11 @@ export class GameReward extends AppBaseEntity {
         )
 
         const list = await repo.aggregate(pipeline).toArray()
-        pagination.total = list.length
+        const totalCount = await repo.count({
+            isReward: false,
+            level,
+        })
+        pagination.total = totalCount
 
         return {
             list,
@@ -98,14 +103,14 @@ export class GameReward extends AppBaseEntity {
     }
 
     static async updateGameRewards(data: GameRewardUpdateReqDTO) {
-        const { userIds } = data
-        if (!userIds.length) return { updatedCount: 0 }
+        const { userIds, level } = data
+        if (!userIds.length || !level) return { updatedCount: 0 }
         const now = getNowUtc()
 
         const repo = AppDataSource.getMongoRepository(GameReward)
 
         const result = await repo.updateMany(
-            { userId: { $in: userIds } },
+            { userId: { $in: userIds }, level },
             { $set: { isReward: true, rewardAt: new Date(now) } }
         )
 
