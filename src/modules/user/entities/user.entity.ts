@@ -7,6 +7,7 @@ import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { GemsDTO } from '../../gems/dtos/gems.dto'
 import { getNowUtc } from '../../../utils'
+import { GameStats } from '../../game-stats/entities/game-stats.entity'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -55,6 +56,31 @@ export class User extends AppBaseEntity {
                 unlockTraining: 0,
             })
         )
+
+        // Lấy ngày hiện tại
+        const now = getNowUtc()
+        const statsDate = new Date(now)
+        statsDate.setUTCHours(0, 0, 0, 0)
+
+        // Kiểm tra xem đã có GameStats của ngày chưa
+        let gameStats = await manager.findOne(GameStats, {
+            where: { statsDate },
+        })
+
+        if (!gameStats) {
+            gameStats = await GameStats.createGameStats(
+                {
+                    statsDate,
+                    totalCreatedUsers: 1,
+                    totalActiveUsers: 0,
+                },
+                manager
+            )
+        } else {
+            gameStats.totalCreatedUsers += 1
+            await manager.save(gameStats)
+        }
+
         return user
     }
 
