@@ -15,16 +15,10 @@ export class UserController {
         @Inject() public userService: UserService
     ) {}
 
-    async signIn(
-        req: AuthRequest,
-        res: Response,
-        next: NextFunction
-    ) {
+    async signIn(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { user } = req
-            res.send(
-                new ResponseWrapper(await this.userService.signIn(user))
-            )
+            res.send(new ResponseWrapper(await this.userService.signIn(user)))
         } catch (err) {
             next(err)
         }
@@ -38,18 +32,16 @@ export class UserController {
         try {
             const params = req.body
             res.send(
-                new ResponseWrapper(await this.userService.refreshToken(params.refreshToken))
+                new ResponseWrapper(
+                    await this.userService.refreshToken(params.refreshToken)
+                )
             )
         } catch (err) {
             next(err)
         }
     }
 
-    signOut = async (
-        req: CKAuthRequest,
-        res: Response,
-        next: NextFunction
-    ) => {
+    signOut = async (req: CKAuthRequest, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers['authorization']
             const [, token] = authHeader && authHeader.split(' ')
@@ -75,4 +67,20 @@ export class UserController {
         }
     }
 
+    getLeaderboard = async (
+        req: CKAuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const { userId } = req
+            res.send(
+                new ResponseWrapper(
+                    await this.userService.getLeaderBoard(userId)
+                )
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
 }

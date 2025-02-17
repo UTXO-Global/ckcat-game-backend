@@ -97,4 +97,9 @@ export class UserService {
             paymentAddress: config.ckbAddress,
         }
     }
+
+    async getLeaderBoard(userId: string) {
+        const res = await User.getLeaderBoard(userId)
+        return res
+    }
 }

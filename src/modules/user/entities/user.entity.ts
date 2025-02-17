@@ -7,6 +7,10 @@ import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { GemsDTO } from '../../gems/dtos/gems.dto'
 import { getNowUtc } from '../../../utils'
+import Container from 'typedi'
+import { CacheKeys, CacheManager } from '../../../cache'
+import { profile } from 'winston'
+import { UserGameAttributes } from './user-game-attributes.entity'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -55,6 +59,9 @@ export class User extends AppBaseEntity {
                 unlockTraining: 0,
             })
         )
+        const cacheManager = Container.get(CacheManager)
+        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, 0)
+
         return user
     }
 
@@ -111,5 +118,72 @@ export class User extends AppBaseEntity {
             excludeExtraneousValues: true,
         })
         return user
+    }
+
+    static async getLeaderBoard(userId: string) {
+        const cacheManager = Container.get(CacheManager)
+        const ids: string[] = await cacheManager.getLeaderBoardWithTop(
+            CacheKeys.leaderBoard(),
+            9
+        )
+
+        // Lấy thông tin người dùng và leaderboard entries
+        const [user, attributes, leaderBoardEntries] = await Promise.all([
+            this.getUser(userId),
+            UserGameAttributes.getUserGameAttributes(userId),
+            Promise.all(
+                ids.map(async (id) => {
+                    const user = await this.getUser(id)
+                    const attributes =
+                        await UserGameAttributes.getUserGameAttributes(id)
+
+                    if (user) {
+                        return {
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            username: user.username,
+                            bossKill: attributes?.amountBossKill || 0,
+                            soul: attributes?.soul || 0,
+                            catHighest: attributes?.catHighest || 0,
+                            duration: user?.totalPlayingTime || 0,
+                        }
+                    }
+                    return null
+                })
+            ),
+        ])
+
+        // Sắp xếp leaderboard dựa trên money giảm dần, nếu bằng nhau thì so bomb giảm dần
+        const sortedLeaderBoard = leaderBoardEntries
+            .filter((entry) => entry !== null)
+            .sort((a, b) => {
+                if (b.bossKill !== a.bossKill) {
+                    return b.bossKill - a.bossKill // Sắp xếp theo money giảm dần
+                }
+                return a.duration - b.duration // Nếu money bằng nhau, sắp xếp bomb giảm dần
+            })
+            .map((entry, index) => ({ ...entry, rank: index + 1 })) // Cập nhật rank
+
+        // Tìm rank chính xác của user trong bảng xếp hạng
+        const userRank =
+            sortedLeaderBoard.findIndex(
+                (entry) => entry.username === user.username
+            ) + 1
+
+        const userEntry = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            bossKill: attributes.amountBossKill,
+            soul: attributes.soul,
+            catHighest: attributes.catHighest,
+            duration: user.totalPlayingTime,
+            rank: userRank,
+        }
+
+        return {
+            user: userEntry,
+            leaderBoard: sortedLeaderBoard,
+        }
     }
 }
