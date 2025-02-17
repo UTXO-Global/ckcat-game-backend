@@ -5,8 +5,6 @@ import { GameDTO } from '../game/dtos/game.dto'
 import { GameService } from './game.service'
 import { DataRequest } from '../../base/base.request'
 import { CKAuthRequest } from '../auth/auth.middleware'
-import { GameRewardUpdateReqDTO } from './dtos/game-reward-update.dto'
-import { DataReqDTO } from '../../base/base.dto'
 
 @Service()
 export class GameController {
@@ -102,35 +100,6 @@ export class GameController {
             const { userId } = req
             res.send(
                 new ResponseWrapper(await this.gameService.getData(userId))
-            )
-        } catch (err) {
-            next(err)
-        }
-    }
-
-    getListGameReward = async (
-        req: DataRequest<DataReqDTO>,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const {list, pagination} = await this.gameService.getListGameReward(req.data)
-            res.send(
-                new ResponseWrapper(list, null, pagination)
-            )
-        } catch (err) {
-            next(err)
-        }
-    }
-
-    updateListGameReawrd = async (
-        req: DataRequest<GameRewardUpdateReqDTO>,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            res.send(
-                new ResponseWrapper(await this.gameService.updateGameReward(req.data))
             )
         } catch (err) {
             next(err)
