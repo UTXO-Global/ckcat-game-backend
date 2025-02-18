@@ -5,10 +5,15 @@ import { UserWallet } from '../wallet/entities/user-wallet.entity'
 import axios from 'axios'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
+import { InternalConvertPointToGemsDTO } from './dtos/internal-convert-point-to-gems.dto'
+import { GemsService } from '../gems/gems.service'
 
 @Service()
 export class InternalService {
-    constructor(@Inject() private config: Config) {}
+    constructor(
+        @Inject() private config: Config,
+        @Inject() private gemsService: GemsService
+    ) {}
     async retrieveDailyCheckIn(walletAddress: string) {
         try {
             const response = await axios.post(
@@ -218,5 +223,61 @@ export class InternalService {
         const list = await this.retrieveListReferral(userWallet.address)
 
         return list
+    }
+
+    async deductPointInternal(walletAddress: string, points: number) {
+        try {
+            const response = await axios.post(
+                `${this.config.apiUrl}/ckcat/internal/points/deduct`,
+                {
+                    user_address: walletAddress,
+                    points: points,
+                },
+                {
+                    headers: {
+                        'API-KEY': this.config.apiKey,
+                    },
+                }
+            )
+            if (!response || !response.data) {
+                throw Errors.InternalServiceError
+            }
+
+            return response.data
+        } catch (error) {
+            if (error.response) {
+                throw {
+                    status: error.response.status,
+                    message: error.response.data?.message || 'Unknown error',
+                }
+            } else {
+                throw Errors.InternalServiceError
+            }
+        }
+    }
+
+    async convertPointToGems(data: InternalConvertPointToGemsDTO) {
+        const { userId, points } = data
+        const userWallet = await UserWallet.getWalletByUserId(userId)
+        if (!userWallet) {
+            throw Errors.UserNotFound
+        }
+
+        const deduct = this.deductPointInternal(
+            'ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdg3f62nr4qz6qh4mcnajnk9gpn83g05jcgh7u5s',
+            points
+        )
+
+        const gemsReceive = points / 30
+
+        if (deduct) {
+            await this.gemsService.gemsHistory({
+                userId,
+                type: 'convert-point',
+                gems: gemsReceive,
+            })
+        }
+
+        return true
     }
 }

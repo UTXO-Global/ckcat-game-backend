@@ -56,18 +56,23 @@ export class UserGameAttributes extends AppBaseEntity {
         return attributes
     }
 
-    static async getUserGameAttributes(userId: string) {
-        const res = await UserGameAttributes.findOne({
-            where: {
-                userId,
-            },
+    static async getAttributesByIds(
+        userIds: string[]
+    ): Promise<Map<string, UserGameAttributeDTO>> {
+        const userAttributesRepos =
+            AppDataSource.getMongoRepository(UserGameAttributes)
+
+        const attributes = await userAttributesRepos.find({
+            where: { userId: { $in: userIds } },
         })
 
-        if (res) {
-            const user = plainToInstance(UserGameAttributeDTO, res, {
-                excludeExtraneousValues: true,
-            })
-            return user
-        }
+        return new Map(
+            attributes.map((attr) => [
+                attr.userId,
+                plainToInstance(UserGameAttributeDTO, attr, {
+                    excludeExtraneousValues: true,
+                }),
+            ])
+        )
     }
 }

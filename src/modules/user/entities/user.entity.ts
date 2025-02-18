@@ -9,7 +9,6 @@ import { GemsDTO } from '../../gems/dtos/gems.dto'
 import { getNowUtc } from '../../../utils'
 import Container from 'typedi'
 import { CacheKeys, CacheManager } from '../../../cache'
-import { profile } from 'winston'
 import { UserGameAttributes } from './user-game-attributes.entity'
 
 @Entity()
@@ -122,68 +121,89 @@ export class User extends AppBaseEntity {
 
     static async getLeaderBoard(userId: string) {
         const cacheManager = Container.get(CacheManager)
+
         const ids: string[] = await cacheManager.getLeaderBoardWithTop(
             CacheKeys.leaderBoard(),
-            9
+            99
         )
 
-        // Lấy thông tin người dùng và leaderboard entries
-        const [user, attributes, leaderBoardEntries] = await Promise.all([
-            this.getUser(userId),
-            UserGameAttributes.getUserGameAttributes(userId),
-            Promise.all(
-                ids.map(async (id) => {
-                    const user = await this.getUser(id)
-                    const attributes =
-                        await UserGameAttributes.getUserGameAttributes(id)
-
-                    if (user) {
-                        return {
-                            firstName: user.firstName,
-                            lastName: user.lastName,
-                            username: user.username,
-                            bossKill: attributes?.amountBossKill || 0,
-                            soul: attributes?.soul || 0,
-                            catHighest: attributes?.catHighest || 0,
-                            duration: user?.totalPlayingTime || 0,
-                        }
-                    }
-                    return null
-                })
-            ),
+        const allUserIds = [userId, ...ids]
+        const [users, attributes] = await Promise.all([
+            this.getUsersByIds(allUserIds),
+            UserGameAttributes.getAttributesByIds(allUserIds),
         ])
 
-        // Sắp xếp leaderboard dựa trên money giảm dần, nếu bằng nhau thì so bomb giảm dần
-        const sortedLeaderBoard = leaderBoardEntries
-            .filter((entry) => entry !== null)
-            .sort((a, b) => {
-                if (b.bossKill !== a.bossKill) {
-                    return b.bossKill - a.bossKill // Sắp xếp theo money giảm dần
-                }
-                return a.duration - b.duration // Nếu money bằng nhau, sắp xếp bomb giảm dần
-            })
-            .map((entry, index) => ({ ...entry, rank: index + 1 })) // Cập nhật rank
+        const leaderBoardEntries = ids
+            .map((id) => {
+                const user = users.get(id)
+                const attr = attributes.get(id)
 
-        // Tìm rank chính xác của user trong bảng xếp hạng
-        const userRank =
-            sortedLeaderBoard.findIndex(
-                (entry) => entry.username === user.username
-            ) + 1
+                return user
+                    ? {
+                          userId: user.id,
+                          firstName: user.firstName,
+                          lastName: user.lastName,
+                          username: user.username,
+                          bossKill: attr?.amountBossKill || 0,
+                          soul: attr?.soul || 0,
+                          catHighest: attr?.catHighest || 0,
+                          duration: user.totalPlayingTime || 0,
+                      }
+                    : null
+            })
+            .filter((entry) => entry !== null)
+
+        // Sort
+        leaderBoardEntries.sort((a, b) => {
+            if (a.bossKill === b.bossKill) {
+                return a.duration - b.duration
+            }
+            return b.bossKill - a.bossKill
+        })
+
+        const sortedLeaderBoard = leaderBoardEntries.map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+        }))
+
+        const user = users.get(userId)
+        const attr = attributes.get(userId)
 
         const userEntry = {
+            userId: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
             username: user.username,
-            bossKill: attributes.amountBossKill,
-            soul: attributes.soul,
-            catHighest: attributes.catHighest,
-            duration: user.totalPlayingTime,
-            rank: userRank,
+            bossKill: attr?.amountBossKill || 0,
+            soul: attr?.soul || 0,
+            catHighest: attr?.catHighest || 0,
+            duration: user.totalPlayingTime || 0,
+            rank:
+                sortedLeaderBoard.find(
+                    (entry) => entry.username === user?.username
+                )?.rank || sortedLeaderBoard.length + 1,
         }
 
         return {
             user: userEntry,
             leaderBoard: sortedLeaderBoard,
         }
+    }
+
+    static async getUsersByIds(
+        userIds: string[]
+    ): Promise<Map<string, UserDTO>> {
+        const userRepos = AppDataSource.getMongoRepository(User)
+
+        const users = await userRepos.find({ where: { id: { $in: userIds } } })
+
+        return new Map(
+            users.map((user) => [
+                user.id,
+                plainToInstance(UserDTO, user, {
+                    excludeExtraneousValues: true,
+                }),
+            ])
+        )
     }
 }

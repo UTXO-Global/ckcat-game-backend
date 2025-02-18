@@ -132,4 +132,8 @@ export class CacheManager {
     async getLeaderBoardWithTop(key: string, top: number) {
         return await this.redisClient.zrevrange(key, 0, top)
     }
+
+    async getUserRank(key: string, member: string) {
+        return await this.redisClient.zrevrank(key, member)
+    }
 }

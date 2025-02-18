@@ -12,7 +12,6 @@ import { Gems } from '../gems/entities/gems.entity'
 import { Config } from '../../configs'
 import { GameReward } from './entities/game-reward.entity'
 import { CacheKeys, CacheManager } from '../../cache'
-import { level } from 'winston'
 import { UserGameAttributes } from '../user/entities/user-game-attributes.entity'
 
 @Service()
@@ -22,105 +21,53 @@ export class GameService {
         @Inject() private config: Config,
         @Inject() private cacheManager: CacheManager
     ) {}
-    // async createGame(data: GameDTO) {
-    //     return await startTransaction(async (manager) => {
-    //         const decrypted = await this.decryptedGameData(data.data)
-    //         const userItem = decrypted?.parsedData?.items?.find(
-    //             (item) => item?.key === 'UserID'
-    //         )
-    //         const levelBossItem = decrypted?.parsedData?.items?.find(
-    //             (item) => item?.key === 'LevelMonster'
-    //         )
-    //         const soulItem = decrypted?.parsedData?.items?.find(
-    //             (item) => item?.key === 'MoneyCoins'
-    //         )
-    //         const catHighestItem = decrypted?.parsedData?.items?.find(
-    //             (item) => item?.key === 'BeastHigest'
-    //         )
-
-    //         if (!userItem || userItem.valueString !== data.userId) {
-    //             throw Errors.UserNotMatch
-    //         }
-
-    //         //Check level boss
-    //         if (
-    //             levelBossItem &&
-    //             this.config.conditionReward.includes(levelBossItem.valueInt + 1)
-    //         ) {
-    //             await GameReward.createGameReward(
-    //                 {
-    //                     userId: data.userId,
-    //                     level: levelBossItem.valueInt + 1,
-    //                 },
-    //                 manager
-    //             )
-    //         }
-
-    //         await this.cacheManager.zAdd(
-    //             CacheKeys.leaderBoard(),
-    //             data.userId,
-    //             (levelBossItem?.valueInt ?? -1) + 1
-    //         )
-
-    //         await UserGameAttributes.createAttributes({
-    //             userId: data.userId,
-    //             amountBossKill: (levelBossItem?.valueInt ?? -1) + 1,
-    //             soul: Number(soulItem?.valueString ?? 0),
-    //             catHighest: catHighestItem?.valueInt ?? 0,
-    //         })
-
-    //         return await Game.createGame(
-    //             plainToInstance(GameDTO, data),
-    //             manager
-    //         )
-    //     })
-    // }
-
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
             const decrypted = await this.decryptedGameData(data.data)
             const items = decrypted?.parsedData?.items || []
 
-            const itemMap = items.reduce((acc, item) => {
-                acc[item.key] = item
-                return acc
-            }, {} as Record<string, any>)
+            const itemMap: Record<string, any> = {}
+            items.forEach((item) => {
+                itemMap[item.key] = item
+            })
 
-            const userItem = itemMap['UserID']
-            const levelBossItem = itemMap['LevelMonster']
-            const soulItem = itemMap['MoneyCoins']
-            const catHighestItem = itemMap['BeastHigest']
+            const {
+                UserID: userItem,
+                LevelMonster: levelBossItem,
+                MoneyCoins: soulItem,
+                BeastHigest: catHighestItem,
+            } = itemMap
 
             if (!userItem || userItem.valueString !== data.userId) {
                 throw Errors.UserNotMatch
             }
 
-            // Kiểm tra level boss và xử lý phần thưởng
+            // check level boss to process reward
+            const nextLevel = (levelBossItem?.valueInt ?? -1) + 1
+
             if (
                 levelBossItem &&
-                this.config.conditionReward.includes(levelBossItem.valueInt + 1)
+                this.config.conditionReward.includes(nextLevel)
             ) {
                 await GameReward.createGameReward(
-                    {
-                        userId: data.userId,
-                        level: levelBossItem.valueInt + 1,
-                    },
+                    { userId: data.userId, level: nextLevel },
                     manager
                 )
             }
 
-            await this.cacheManager.zAdd(
-                CacheKeys.leaderBoard(),
-                data.userId,
-                (levelBossItem?.valueInt ?? -1) + 1
-            )
-
-            await UserGameAttributes.createAttributes({
-                userId: data.userId,
-                amountBossKill: (levelBossItem?.valueInt ?? -1) + 1,
-                soul: Number(soulItem?.valueString ?? 0),
-                catHighest: catHighestItem?.valueInt ?? 0,
-            })
+            await Promise.all([
+                this.cacheManager.zAdd(
+                    CacheKeys.leaderBoard(),
+                    data.userId,
+                    nextLevel
+                ),
+                UserGameAttributes.createAttributes({
+                    userId: data.userId,
+                    amountBossKill: nextLevel,
+                    soul: Number(soulItem?.valueString ?? 0),
+                    catHighest: catHighestItem?.valueInt ?? 0,
+                }),
+            ])
 
             return await Game.createGame(
                 plainToInstance(GameDTO, data),
