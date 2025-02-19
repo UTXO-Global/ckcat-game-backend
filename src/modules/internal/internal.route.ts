@@ -7,6 +7,7 @@ import { InternalController } from './internal.controller'
 import { transformAndValidate } from '../../utils/validator'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
+import { InternalConvertPointToGemsDTO } from './dtos/internal-convert-point-to-gems.dto'
 
 @Service()
 export class InternalRoute implements BaseRoute {
@@ -48,6 +49,14 @@ export class InternalRoute implements BaseRoute {
             '/referrals',
             this.authMiddleware.authorization.bind(this.authMiddleware),
             this.internalController.getListReferral.bind(
+                this.internalController
+            )
+        )
+        this.router.post(
+            '/convert',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            transformAndValidate(InternalConvertPointToGemsDTO),
+            this.internalController.convertPointToGems.bind(
                 this.internalController
             )
         )

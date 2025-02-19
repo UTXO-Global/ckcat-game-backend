@@ -116,6 +116,31 @@ export const decrypt = (
     return decrypted
 }
 
+export const decryptData = (
+    encryptedText: string,
+    secretKeyDecrypt: string,
+    ivKeyDecrypt: string
+): string => {
+    const crypto = require('crypto')
+    // Convert secretKey and ivKey to Buffer
+    const key = crypto.createHash('sha256').update(secretKeyDecrypt).digest()
+
+    const fIV = getValidIV(ivKeyDecrypt)
+    // const iv = Buffer.from(fIV, 'hex')
+
+    // Create decipher object
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, fIV)
+
+    // Decrypt the string
+    let decrypted = decipher.update(encryptedText, 'base64', 'utf8')
+    decrypted += decipher.final('utf8')
+
+    // console.log('Encrypted Text:', encryptedText)
+    // console.log('Decrypted Text:', decrypted)
+
+    return decrypted
+}
+
 export const verifyTelegramWebAppData = (
     telegramInitData: string,
     telegramToken: string
