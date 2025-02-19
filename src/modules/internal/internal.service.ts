@@ -7,6 +7,10 @@ import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
 import { InternalConvertPointToGemsDTO } from './dtos/internal-convert-point-to-gems.dto'
 import { GemsService } from '../gems/gems.service'
+import { User } from '../user/entities/user.entity'
+import { startTransaction } from '../../database/connection'
+import { Gems } from '../gems/entities/gems.entity'
+import { GemsType } from '../gems/types/gems.type'
 
 @Service()
 export class InternalService {
@@ -257,27 +261,39 @@ export class InternalService {
     }
 
     async convertPointToGems(data: InternalConvertPointToGemsDTO) {
-        const { userId, points } = data
-        const userWallet = await UserWallet.getWalletByUserId(userId)
-        if (!userWallet) {
-            throw Errors.UserNotFound
-        }
+        return startTransaction(async (manager) => {
+            const { userId, points } = data
+            const userWallet = await UserWallet.getWalletByUserId(userId)
+            if (!userWallet) {
+                throw Errors.WalletAddressNotFound
+            }
 
-        const deduct = this.deductPointInternal(
-            'ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdg3f62nr4qz6qh4mcnajnk9gpn83g05jcgh7u5s',
-            points
-        )
+            const profile = await User.getUser(userId)
+            if (!profile) throw Errors.UserNotFound
 
-        const gemsReceive = points / 30
+            if (profile.isConvert) throw Errors.UserAlreadyConvert
 
-        if (deduct) {
-            await this.gemsService.gemsHistory({
-                userId,
-                type: 'convert-point',
-                gems: gemsReceive,
-            })
-        }
+            const deduct = this.deductPointInternal(userWallet.address, points)
 
-        return true
+            const gemsReceive = points / 1
+
+            if (deduct) {
+                profile.gems += gemsReceive
+                profile.isConvert = true
+
+                await Gems.createGems(
+                    {
+                        userId,
+                        type: GemsType.ConvertPoints,
+                        gems: gemsReceive,
+                    },
+                    manager
+                )
+
+                await User.updateUser(profile, manager)
+            }
+
+            return true
+        })
     }
 }

@@ -128,6 +128,10 @@ export const Errors = {
         'error.invalidGameData',
         'Invalid Game Data'
     ),
+    UserAlreadyConvert: new ErrorResp(
+        'error.userAlreadyConvert',
+        'User Already Convert'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {

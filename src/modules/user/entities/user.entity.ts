@@ -35,6 +35,9 @@ export class User extends AppBaseEntity {
     unlockTraining: number
 
     @Column()
+    isConvert: boolean
+
+    @Column()
     lastLogin: Date
 
     @Column()
@@ -56,6 +59,7 @@ export class User extends AppBaseEntity {
             User.create({
                 ...createFields,
                 unlockTraining: 0,
+                isConvert: false,
             })
         )
         const cacheManager = Container.get(CacheManager)

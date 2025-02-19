@@ -151,12 +151,4 @@ export class GameService {
     private async decryptedGameData(data: string) {
         return await Game.decryptedGameData(data)
     }
-
-    async getData(userId: string) {
-        const game = await Game.getGame(userId)
-        if (!game) throw Errors.GameNotFound
-
-        const decryptData = await this.decryptedGameData(game.data)
-        return { userId, bossCount: decryptData }
-    }
 }

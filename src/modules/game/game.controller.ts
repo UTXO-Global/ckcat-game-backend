@@ -90,19 +90,4 @@ export class GameController {
             next(err)
         }
     }
-
-    getDecryptedGameData = async (
-        req: CKAuthRequest,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const { userId } = req
-            res.send(
-                new ResponseWrapper(await this.gameService.getData(userId))
-            )
-        } catch (err) {
-            next(err)
-        }
-    }
 }
