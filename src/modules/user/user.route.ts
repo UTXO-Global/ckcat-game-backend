@@ -4,6 +4,8 @@ import { BaseRoute } from '../../app'
 import { AuthMiddleware } from '../auth/auth.middleware'
 import { UserController } from './user.controller'
 import { Config } from '../../configs'
+import { transformAndValidate } from '../../utils/validator'
+import { UserGetLeaderboardReqDTO } from './dtos/user-get-leaderboard.dto'
 
 @Service()
 export class UserRoute implements BaseRoute {
@@ -45,6 +47,7 @@ export class UserRoute implements BaseRoute {
         this.router.get(
             '/leaderboard',
             this.authMiddleware.authorization.bind(this.authMiddleware),
+            transformAndValidate(UserGetLeaderboardReqDTO),
             this.userController.getLeaderboard.bind(this.userController)
         )
     }
