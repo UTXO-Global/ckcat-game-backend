@@ -41,5 +41,11 @@ export class UserRoute implements BaseRoute {
             this.authMiddleware.authorization.bind(this.authMiddleware),
             this.userController.getProfile.bind(this.userController)
         )
+
+        this.router.get(
+            '/leaderboard',
+            this.authMiddleware.authorization.bind(this.authMiddleware),
+            this.userController.getLeaderboard.bind(this.userController)
+        )
     }
 }
