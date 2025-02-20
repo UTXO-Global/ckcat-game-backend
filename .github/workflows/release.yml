@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches: [prod, uat, staging]
+
+env:
+  CURRENT_SERVICE: ${{ github.event.repository.name }}
+  PROJECT_ID: fewcha-450202
+  REGION: us-central1
+  GKE_CLUSTER: fewcha-gke
+  NAMESPACE: ${{ github.ref_name }}
+
+jobs:
+  build_and_publish:
+    name: Build And Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/auth@v2
+        id: auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: "projects/624428081092/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+          service_account: "github-actions-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Get GKE credential
+        uses: "google-github-actions/get-gke-credentials@v2"
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.REGION }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push Service docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.CURRENT_SERVICE }}/${{ env.CURRENT_SERVICE }}:${{ env.NAMESPACE }}
+          cache-from: type=registry,ref=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.CURRENT_SERVICE }}/${{ env.CURRENT_SERVICE }}:${{ env.NAMESPACE }}
+          cache-to: type=inline
+
+      - name: Apply to K8S
+        run: |-
+          kubectl rollout restart -n utxo-global-${{ env.NAMESPACE }} deploy ${{ env.CURRENT_SERVICE }}
