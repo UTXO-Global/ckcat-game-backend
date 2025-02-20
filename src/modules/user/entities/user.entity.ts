@@ -7,6 +7,10 @@ import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { GemsDTO } from '../../gems/dtos/gems.dto'
 import { getNowUtc } from '../../../utils'
+import Container from 'typedi'
+import { CacheKeys, CacheManager } from '../../../cache'
+import { UserGameAttributes } from './user-game-attributes.entity'
+import { UserGetLeaderboardReqDTO } from '../dtos/user-get-leaderboard.dto'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -32,6 +36,9 @@ export class User extends AppBaseEntity {
     unlockTraining: number
 
     @Column()
+    isConvert: boolean
+
+    @Column()
     lastLogin: Date
 
     @Column()
@@ -53,8 +60,12 @@ export class User extends AppBaseEntity {
             User.create({
                 ...createFields,
                 unlockTraining: 0,
+                isConvert: false,
             })
         )
+        const cacheManager = Container.get(CacheManager)
+        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, 0)
+
         return user
     }
 
@@ -111,5 +122,49 @@ export class User extends AppBaseEntity {
             excludeExtraneousValues: true,
         })
         return user
+    }
+
+    static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+        const { userId, pagination } = data
+        const cacheManager = Container.get(CacheManager)
+
+        const allIds: string[] = await cacheManager.getAllLeaderBoardIds(
+            CacheKeys.leaderBoard()
+        )
+
+        const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
+            allIds
+        )
+
+        const allUsers = allIds.map((id) => usersMap.get(id)).filter(Boolean)
+
+        allUsers.sort((a, b) => {
+            if (a.amountBossKill === b.amountBossKill) {
+                return a.totalPlayingTime - b.totalPlayingTime
+            }
+            return b.amountBossKill - a.amountBossKill
+        })
+
+        const rankedUsers = allUsers.map((user, index) => ({
+            ...user,
+            rank: index + 1,
+        }))
+
+        const paginatedUsers = rankedUsers.slice(
+            pagination.getOffset(),
+            pagination.getOffset() + pagination.limit
+        )
+
+        pagination.total = await cacheManager.getLeaderBoardTotal(
+            CacheKeys.leaderBoard()
+        )
+        const userEntry =
+            rankedUsers.find((entry) => entry.userId === userId) || null
+
+        return {
+            user: userEntry,
+            leaderBoard: paginatedUsers,
+            pagination,
+        }
     }
 }

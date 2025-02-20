@@ -1,3 +1,4 @@
+import { Config, config } from './../../configs/index'
 import { Inject, Service } from 'typedi'
 import { startTransaction } from '../../database/connection'
 import { User } from './entities/user.entity'
@@ -14,6 +15,7 @@ import { Errors } from '../../utils/error'
 import { GemsService } from '../gems/gems.service'
 import { ItemService } from '../item/item.service'
 import { UserWallet } from '../wallet/entities/user-wallet.entity'
+import { UserGetLeaderboardReqDTO } from './dtos/user-get-leaderboard.dto'
 
 @Service()
 export class UserService {
@@ -21,7 +23,8 @@ export class UserService {
         @Inject() private authService: AuthService,
         @Inject() private cacheManager: CacheManager,
         @Inject() private gemsService: GemsService,
-        @Inject() private itemService: ItemService
+        @Inject() private itemService: ItemService,
+        @Inject() private config: Config
     ) {}
 
     async signIn(data: UserDTO) {
@@ -92,6 +95,12 @@ export class UserService {
             dailyReward,
             slot,
             walletAddress: wallet?.address || '',
+            paymentAddress: config.ckbAddress,
         }
+    }
+
+    async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+        const res = await User.getLeaderBoard(data)
+        return res
     }
 }

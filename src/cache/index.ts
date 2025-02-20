@@ -14,6 +14,7 @@ export const CacheKeys = {
     aiBullets: `ai-bullets`,
     deduction: (meetingId: string) => `deduction:${meetingId}`,
     admin: (email: string) => `admin:${email}`,
+    leaderBoard: () => 'leader-board',
 }
 
 export const CacheTimes = {
@@ -122,5 +123,23 @@ export class CacheManager {
         return plainToInstance(cls, parsed, {
             excludeExtraneousValues: true,
         })
+    }
+
+    async zAdd(key: string, member: string, score: number) {
+        return await this.redisClient.zadd(key, score, member)
+    }
+
+    async getAllLeaderBoardIds(key: string): Promise<string[]> {
+        const client = this.redisClient
+
+        const allIds = await client.zrevrange(key, 0, -1)
+
+        return allIds
+    }
+
+    async getLeaderBoardTotal(key: string): Promise<number> {
+        const client = this.redisClient
+        const total = await client.zcard(key)
+        return total
     }
 }
