@@ -10,6 +10,7 @@ import { getNowUtc } from '../../../utils'
 import Container from 'typedi'
 import { CacheKeys, CacheManager } from '../../../cache'
 import { UserGameAttributes } from './user-game-attributes.entity'
+import { UserGetLeaderboardReqDTO } from '../dtos/user-get-leaderboard.dto'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -123,91 +124,47 @@ export class User extends AppBaseEntity {
         return user
     }
 
-    static async getLeaderBoard(userId: string) {
+    static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+        const { userId, pagination } = data
         const cacheManager = Container.get(CacheManager)
 
-        const ids: string[] = await cacheManager.getLeaderBoardWithTop(
-            CacheKeys.leaderBoard(),
-            99
+        const allIds: string[] = await cacheManager.getAllLeaderBoardIds(
+            CacheKeys.leaderBoard()
         )
 
-        const allUserIds = [userId, ...ids]
-        const [users, attributes] = await Promise.all([
-            this.getUsersByIds(allUserIds),
-            UserGameAttributes.getAttributesByIds(allUserIds),
-        ])
+        const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
+            allIds
+        )
 
-        const leaderBoardEntries = ids
-            .map((id) => {
-                const user = users.get(id)
-                const attr = attributes.get(id)
+        const allUsers = allIds.map((id) => usersMap.get(id)).filter(Boolean)
 
-                return user
-                    ? {
-                          userId: user.id,
-                          firstName: user.firstName,
-                          lastName: user.lastName,
-                          username: user.username,
-                          bossKill: attr?.amountBossKill || 0,
-                          soul: attr?.soul || 0,
-                          catHighest: attr?.catHighest || 0,
-                          duration: user.totalPlayingTime || 0,
-                      }
-                    : null
-            })
-            .filter((entry) => entry !== null)
-
-        // Sort
-        leaderBoardEntries.sort((a, b) => {
-            if (a.bossKill === b.bossKill) {
-                return a.duration - b.duration
+        allUsers.sort((a, b) => {
+            if (a.amountBossKill === b.amountBossKill) {
+                return a.totalPlayingTime - b.totalPlayingTime
             }
-            return b.bossKill - a.bossKill
+            return b.amountBossKill - a.amountBossKill
         })
 
-        const sortedLeaderBoard = leaderBoardEntries.map((entry, index) => ({
-            ...entry,
+        const rankedUsers = allUsers.map((user, index) => ({
+            ...user,
             rank: index + 1,
         }))
 
-        const user = users.get(userId)
-        const attr = attributes.get(userId)
+        const paginatedUsers = rankedUsers.slice(
+            pagination.getOffset(),
+            pagination.getOffset() + pagination.limit
+        )
 
-        const userEntry = {
-            userId: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            bossKill: attr?.amountBossKill || 0,
-            soul: attr?.soul || 0,
-            catHighest: attr?.catHighest || 0,
-            duration: user.totalPlayingTime || 0,
-            rank:
-                sortedLeaderBoard.find(
-                    (entry) => entry.username === user?.username
-                )?.rank || sortedLeaderBoard.length + 1,
-        }
+        pagination.total = await cacheManager.getLeaderBoardTotal(
+            CacheKeys.leaderBoard()
+        )
+        const userEntry =
+            rankedUsers.find((entry) => entry.userId === userId) || null
 
         return {
             user: userEntry,
-            leaderBoard: sortedLeaderBoard,
+            leaderBoard: paginatedUsers,
+            pagination,
         }
-    }
-
-    static async getUsersByIds(
-        userIds: string[]
-    ): Promise<Map<string, UserDTO>> {
-        const userRepos = AppDataSource.getMongoRepository(User)
-
-        const users = await userRepos.find({ where: { id: { $in: userIds } } })
-
-        return new Map(
-            users.map((user) => [
-                user.id,
-                plainToInstance(UserDTO, user, {
-                    excludeExtraneousValues: true,
-                }),
-            ])
-        )
     }
 }

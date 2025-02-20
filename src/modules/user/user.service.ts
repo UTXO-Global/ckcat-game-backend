@@ -15,6 +15,7 @@ import { Errors } from '../../utils/error'
 import { GemsService } from '../gems/gems.service'
 import { ItemService } from '../item/item.service'
 import { UserWallet } from '../wallet/entities/user-wallet.entity'
+import { UserGetLeaderboardReqDTO } from './dtos/user-get-leaderboard.dto'
 
 @Service()
 export class UserService {
@@ -98,8 +99,8 @@ export class UserService {
         }
     }
 
-    async getLeaderBoard(userId: string) {
-        const res = await User.getLeaderBoard(userId)
+    async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+        const res = await User.getLeaderBoard(data)
         return res
     }
 }
