@@ -44,6 +44,7 @@ export class GameService {
 
             // check level boss to process reward
             const nextLevel = levelBossItem?.valueInt ?? 0
+            const catHighest = (catHighestItem?.valueInt ?? -1) + 1
 
             if (
                 levelBossItem &&
@@ -65,7 +66,7 @@ export class GameService {
                     userId: data.userId,
                     amountBossKill: nextLevel,
                     soul: Number(soulItem?.valueString ?? 0),
-                    catHighest: catHighestItem?.valueInt ?? 0,
+                    catHighest: catHighest,
                 }),
             ])
 
