@@ -142,4 +142,18 @@ export class CacheManager {
         const total = await client.zcard(key)
         return total
     }
+
+    async getPaginatedLeaderBoardIds(
+        key: string,
+        offset: number,
+        limit: number
+    ): Promise<string[]> {
+        return await this.redisClient.zrevrange(key, offset, offset + limit - 1)
+    }
+
+    async getUserRank(key: string, userId: string): Promise<number | null> {
+        const client = this.redisClient
+        const rank = await client.zrevrank(key, userId)
+        return rank !== null ? rank : null
+    }
 }
