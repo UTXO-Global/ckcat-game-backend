@@ -124,7 +124,7 @@ export class UserGameAttributes extends AppBaseEntity {
                         preserveNullAndEmptyArrays: true,
                     },
                 },
-                { $limit: 1 }, // Tối ưu để dừng sau khi tìm thấy 1 user
+                { $limit: 1 },
             ])
             .toArray()
 
