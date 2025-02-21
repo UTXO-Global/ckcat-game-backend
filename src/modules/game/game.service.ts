@@ -43,13 +43,14 @@ export class GameService {
             }
 
             // check level boss to process reward
+            const nextLevel = levelBossItem?.valueInt ?? 0
 
             if (
                 levelBossItem &&
-                this.config.conditionReward.includes(levelBossItem?.valueInt)
+                this.config.conditionReward.includes(nextLevel)
             ) {
                 await GameReward.createGameReward(
-                    { userId: data.userId, level: levelBossItem?.valueInt },
+                    { userId: data.userId, level: nextLevel },
                     manager
                 )
             }
@@ -58,11 +59,11 @@ export class GameService {
                 this.cacheManager.zAdd(
                     CacheKeys.leaderBoard(),
                     data.userId,
-                    levelBossItem?.valueInt ?? 0
+                    nextLevel
                 ),
                 UserGameAttributes.createAttributes({
                     userId: data.userId,
-                    amountBossKill: levelBossItem?.valueInt ?? 0,
+                    amountBossKill: nextLevel,
                     soul: Number(soulItem?.valueString ?? 0),
                     catHighest: catHighestItem?.valueInt ?? 0,
                 }),
