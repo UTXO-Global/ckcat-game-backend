@@ -103,4 +103,42 @@ export class UserGameAttributes extends AppBaseEntity {
             ])
         )
     }
+
+    static async getUserWithAttributesById(userId: string) {
+        const userRepos = AppDataSource.getMongoRepository(User)
+
+        const user: UserWithAttributes[] = await userRepos
+            .aggregate([
+                { $match: { id: userId } },
+                {
+                    $lookup: {
+                        from: 'user_game_attributes',
+                        localField: 'id',
+                        foreignField: 'userId',
+                        as: 'attributes',
+                    },
+                },
+                {
+                    $unwind: {
+                        path: '$attributes',
+                        preserveNullAndEmptyArrays: true,
+                    },
+                },
+                { $limit: 1 }, // Tối ưu để dừng sau khi tìm thấy 1 user
+            ])
+            .toArray()
+
+        if (!user.length) return null
+
+        return {
+            userId: user[0].id,
+            firstName: user[0].firstName,
+            lastName: user[0].lastName,
+            username: user[0].username,
+            amountBossKill: user[0].attributes?.amountBossKill || 0,
+            soul: user[0].attributes?.soul || 0,
+            catHighest: user[0].attributes?.catHighest || 0,
+            totalPlayingTime: user[0].totalPlayingTime || 0,
+        }
+    }
 }

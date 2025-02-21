@@ -63,8 +63,6 @@ export class User extends AppBaseEntity {
                 isConvert: false,
             })
         )
-        const cacheManager = Container.get(CacheManager)
-        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, 0)
 
         return user
     }
@@ -124,46 +122,93 @@ export class User extends AppBaseEntity {
         return user
     }
 
+    // static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+    //     const { userId, pagination } = data
+    //     const cacheManager = Container.get(CacheManager)
+
+    //     const allIds: string[] = await cacheManager.getAllLeaderBoardIds(
+    //         CacheKeys.leaderBoard()
+    //     )
+
+    //     const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
+    //         allIds
+    //     )
+
+    //     const allUsers = allIds.map((id) => usersMap.get(id)).filter(Boolean)
+
+    //     allUsers.sort((a, b) => {
+    //         if (a.amountBossKill === b.amountBossKill) {
+    //             return a.totalPlayingTime - b.totalPlayingTime
+    //         }
+    //         return b.amountBossKill - a.amountBossKill
+    //     })
+
+    //     const rankedUsers = allUsers.map((user, index) => ({
+    //         ...user,
+    //         rank: index + 1,
+    //     }))
+
+    //     const paginatedUsers = rankedUsers.slice(
+    //         pagination.getOffset(),
+    //         pagination.getOffset() + pagination.limit
+    //     )
+
+    //     pagination.total = await cacheManager.getLeaderBoardTotal(
+    //         CacheKeys.leaderBoard()
+    //     )
+    //     const userEntry =
+    //         rankedUsers.find((entry) => entry.userId === userId) || null
+
+    //     return {
+    //         user: userEntry,
+    //         leaderBoard: paginatedUsers,
+    //         pagination,
+    //     }
+    // }
+
     static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
         const { userId, pagination } = data
         const cacheManager = Container.get(CacheManager)
 
-        const allIds: string[] = await cacheManager.getAllLeaderBoardIds(
-            CacheKeys.leaderBoard()
+        const allIds = await cacheManager.getPaginatedLeaderBoardIds(
+            CacheKeys.leaderBoard(),
+            pagination.getOffset(),
+            pagination.limit
         )
+
+        let userRank = await cacheManager.getUserRank(
+            CacheKeys.leaderBoard(),
+            userId
+        )
+        userRank = userRank !== null ? userRank + 1 : null
 
         const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
             allIds
         )
-
-        const allUsers = allIds.map((id) => usersMap.get(id)).filter(Boolean)
-
-        allUsers.sort((a, b) => {
-            if (a.amountBossKill === b.amountBossKill) {
-                return a.totalPlayingTime - b.totalPlayingTime
-            }
-            return b.amountBossKill - a.amountBossKill
-        })
-
-        const rankedUsers = allUsers.map((user, index) => ({
-            ...user,
-            rank: index + 1,
+        let rankedUsers = allIds.map((id, index) => ({
+            ...usersMap.get(id),
+            rank: pagination.getOffset() + index + 1,
         }))
 
-        const paginatedUsers = rankedUsers.slice(
-            pagination.getOffset(),
-            pagination.getOffset() + pagination.limit
-        )
+        let userEntry =
+            rankedUsers.find((entry) => entry.userId === userId) || null
+
+        if (!userEntry) {
+            const userAttributes =
+                await UserGameAttributes.getUserWithAttributesById(userId)
+
+            if (userAttributes) {
+                userEntry = { ...userAttributes, rank: userRank }
+            }
+        }
 
         pagination.total = await cacheManager.getLeaderBoardTotal(
             CacheKeys.leaderBoard()
         )
-        const userEntry =
-            rankedUsers.find((entry) => entry.userId === userId) || null
 
         return {
             user: userEntry,
-            leaderBoard: paginatedUsers,
+            leaderBoard: rankedUsers,
             pagination,
         }
     }

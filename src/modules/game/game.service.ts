@@ -23,6 +23,8 @@ export class GameService {
     ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
+            const user = await User.getUser(data.userId)
+            if (!user) throw Errors.UserNotFound
             const decrypted = await this.decryptedGameData(data.data)
             const items = decrypted?.parsedData?.items || []
 
@@ -56,12 +58,23 @@ export class GameService {
                 )
             }
 
+            // Lấy totalPlayingTime của user từ database hoặc cache
+
+            // Normalize thời gian chơi
+            const normalizedTime = user.totalPlayingTime / 1000000
+
+            // Tính toán score để lưu vào Redis
+
+            const adjustedTime = (1 - normalizedTime) * 1000000 // Nhân 1 triệu để giữ độ chính xác
+            const score = nextLevel + adjustedTime / 1000000000 // Chia để giữ số nhỏ hơn 1
+
             await Promise.all([
                 this.cacheManager.zAdd(
                     CacheKeys.leaderBoard(),
                     data.userId,
-                    nextLevel
+                    score
                 ),
+
                 UserGameAttributes.createAttributes({
                     userId: data.userId,
                     amountBossKill: nextLevel,
