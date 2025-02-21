@@ -43,7 +43,7 @@ export class GameService {
             }
 
             // check level boss to process reward
-            const nextLevel = (levelBossItem?.valueInt ?? -1) + 1
+            const nextLevel = levelBossItem?.valueInt ?? 0
 
             if (
                 levelBossItem &&
