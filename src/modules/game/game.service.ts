@@ -58,15 +58,7 @@ export class GameService {
                 )
             }
 
-            // Lấy totalPlayingTime của user từ database hoặc cache
-
-            // Normalize thời gian chơi
-            const normalizedTime = user.totalPlayingTime / 1000000
-
-            // Tính toán score để lưu vào Redis
-
-            const adjustedTime = (1 - normalizedTime) * 1000000 // Nhân 1 triệu để giữ độ chính xác
-            const score = nextLevel + adjustedTime / 1000000000 // Chia để giữ số nhỏ hơn 1
+            const score = nextLevel + (1 - user.totalPlayingTime / 1e6) / 1e3
 
             await Promise.all([
                 this.cacheManager.zAdd(

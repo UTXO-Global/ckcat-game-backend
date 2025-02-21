@@ -122,50 +122,6 @@ export class User extends AppBaseEntity {
         return user
     }
 
-    // static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
-    //     const { userId, pagination } = data
-    //     const cacheManager = Container.get(CacheManager)
-
-    //     const allIds: string[] = await cacheManager.getAllLeaderBoardIds(
-    //         CacheKeys.leaderBoard()
-    //     )
-
-    //     const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
-    //         allIds
-    //     )
-
-    //     const allUsers = allIds.map((id) => usersMap.get(id)).filter(Boolean)
-
-    //     allUsers.sort((a, b) => {
-    //         if (a.amountBossKill === b.amountBossKill) {
-    //             return a.totalPlayingTime - b.totalPlayingTime
-    //         }
-    //         return b.amountBossKill - a.amountBossKill
-    //     })
-
-    //     const rankedUsers = allUsers.map((user, index) => ({
-    //         ...user,
-    //         rank: index + 1,
-    //     }))
-
-    //     const paginatedUsers = rankedUsers.slice(
-    //         pagination.getOffset(),
-    //         pagination.getOffset() + pagination.limit
-    //     )
-
-    //     pagination.total = await cacheManager.getLeaderBoardTotal(
-    //         CacheKeys.leaderBoard()
-    //     )
-    //     const userEntry =
-    //         rankedUsers.find((entry) => entry.userId === userId) || null
-
-    //     return {
-    //         user: userEntry,
-    //         leaderBoard: paginatedUsers,
-    //         pagination,
-    //     }
-    // }
-
     static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
         const { userId, pagination } = data
         const cacheManager = Container.get(CacheManager)
