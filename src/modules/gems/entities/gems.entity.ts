@@ -16,6 +16,10 @@ import { User } from '../../user/entities/user.entity'
 import { Errors } from '../../../utils/error'
 import { GemsType } from '../types/gems.type'
 import Container from 'typedi'
+import { Package } from '../../package/entities/package.entity'
+import { PackageTypes } from '../../package/types/package-type.type'
+import { OrderDTO } from '../../order/dtos/order.dto'
+import { Order } from '../../order/entities/order.entity'
 
 @Entity()
 export class Gems extends AppBaseEntity {
@@ -102,7 +106,7 @@ export class Gems extends AppBaseEntity {
             throw Errors.ConvertAddressNotMatch
         }
 
-        userProfile.gems += gems
+        userProfile.gems = gems
 
         await Gems.createGems(
             {
@@ -112,6 +116,16 @@ export class Gems extends AppBaseEntity {
             },
             manager
         )
+
+        const packageModel = await Package.getPackageByType(
+            PackageTypes.ConvertGems
+        )
+        const transactionDTO = new OrderDTO()
+        transactionDTO.userId = userProfile.id
+        transactionDTO.packageId = packageModel._id.toString()
+        transactionDTO.price = gems
+        transactionDTO.status = 'committed'
+        await Order.createOrder(transactionDTO, manager)
 
         await User.updateUser(userProfile, manager)
         return true
