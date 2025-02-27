@@ -36,7 +36,7 @@ export class User extends AppBaseEntity {
     unlockTraining: number
 
     @Column()
-    isConvert: boolean
+    convertAddress: string
 
     @Column()
     lastLogin: Date
@@ -60,7 +60,6 @@ export class User extends AppBaseEntity {
             User.create({
                 ...createFields,
                 unlockTraining: 0,
-                isConvert: false,
             })
         )
 

@@ -6,7 +6,6 @@ import { CKAuthRequest } from '../auth/auth.middleware'
 import { DataRequest } from '../../base/base.request'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
-import { InternalConvertPointToGemsDTO } from './dtos/internal-convert-point-to-gems.dto'
 
 @Service()
 export class InternalController {
@@ -82,26 +81,6 @@ export class InternalController {
         try {
             const result = await this.internalService.getListReferral(
                 req.userId
-            )
-            res.send(new ResponseWrapper(result))
-        } catch (err) {
-            if (err.status && err.message) {
-                res.status(err.status).send(new ResponseWrapper(null, err))
-            } else {
-                next(err)
-            }
-        }
-    }
-
-    async convertPointToGems(
-        req: DataRequest<InternalConvertPointToGemsDTO>,
-        res: Response,
-        next: NextFunction
-    ) {
-        try {
-            req.data.userId = req.userId
-            const result = await this.internalService.convertPointToGems(
-                req.data
             )
             res.send(new ResponseWrapper(result))
         } catch (err) {
