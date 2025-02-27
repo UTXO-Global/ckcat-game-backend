@@ -107,7 +107,7 @@ export class Gems extends AppBaseEntity {
         await Gems.createGems(
             {
                 userId: userProfile.id,
-                type: GemsType.ConvertPointToGems,
+                type: GemsType.ConvertGems,
                 gems,
             },
             manager
