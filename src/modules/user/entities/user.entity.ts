@@ -167,4 +167,24 @@ export class User extends AppBaseEntity {
             pagination,
         }
     }
+
+    static async updateRedisLeaderboard() {
+        const profiles = await User.find()
+        const cacheManager = Container.get(CacheManager)
+
+        const updates = profiles.map(async (profile) => {
+            const attribute = await UserGameAttributes.findOne({
+                where: { userId: profile.id },
+            })
+            if (!attribute) return 0
+
+            const score =
+                attribute.amountBossKill +
+                (1 - profile.totalPlayingTime / 1e6) / 1e3
+            return cacheManager.zAdd(CacheKeys.leaderBoard(), profile.id, score)
+        })
+
+        const results = await Promise.all(updates)
+        return results.reduce((acc, val) => acc + val, 0)
+    }
 }
