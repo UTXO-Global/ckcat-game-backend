@@ -24,6 +24,7 @@ export class GameSeason {
 
     static async getGameSeason() {
         const now = getNowUtc()
+
         const gameSeason = await AppDataSource.getMongoRepository(
             GameSeason
         ).findOne({
