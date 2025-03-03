@@ -13,6 +13,7 @@ import { Config } from '../../configs'
 import { GameReward } from './entities/game-reward.entity'
 import { CacheKeys, CacheManager } from '../../cache'
 import { UserGameAttributes } from '../user/entities/user-game-attributes.entity'
+import { GameLogHistory } from './entities/game-log-history.entity'
 
 @Service()
 export class GameService {
@@ -73,6 +74,14 @@ export class GameService {
                     soul: Number(soulItem?.valueString ?? 0),
                     catHighest: catHighest,
                 }),
+
+                GameLogHistory.createGameLogHistory(
+                    {
+                        userId: data.userId,
+                        data: data.data,
+                    },
+                    manager
+                ),
             ])
 
             return await Game.createGame(
