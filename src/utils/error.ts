@@ -137,6 +137,10 @@ export const Errors = {
         'Convert Address Not Match'
     ),
     InvalidApiKey: new ErrorResp('error.invalidApiKey', 'Invalid Api Key'),
+    GameSeasonNotFound: new ErrorResp(
+        'error.gameSeasonNotFound',
+        'Game Season Not Found'
+    ),
 }
 
 export const handleError = (err: Error, res: Response) => {
