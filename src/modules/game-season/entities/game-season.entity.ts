@@ -27,7 +27,7 @@ export class GameSeason {
 
         const gameSeason = await AppDataSource.getMongoRepository(
             GameSeason
-        ).find({
+        ).findOne({
             where: {
                 endDate: { $gte: new Date(now) },
             },
