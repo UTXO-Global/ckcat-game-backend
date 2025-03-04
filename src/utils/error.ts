@@ -2,6 +2,7 @@ import { Expose, plainToInstance } from 'class-transformer'
 import { Response } from 'express'
 import { logger } from './logger'
 import { ResponseWrapper } from './response'
+import { error } from 'winston'
 
 export class ErrorResp extends Error {
     @Expose()
@@ -95,6 +96,7 @@ export const Errors = {
         'error.internalServiceError',
         'Internal Service Error'
     ),
+    GameNotFound: new ErrorResp('error.gameNotFound', 'Game Not Found'),
     AdminNotFound: new ErrorResp('error.adminNotFound', 'Admin Not Found'),
     EndMustGreaterThanStart: new ErrorResp(
         'error.endMustGreaterThanStart',
@@ -120,6 +122,24 @@ export const Errors = {
     BotSettingNotFound: new ErrorResp(
         'erorr.botSettingNotFound',
         'Bot Setting Not Found'
+    ),
+    UserNotMatch: new ErrorResp('error.userNotMatch', 'User Not Match'),
+    InvalidGameData: new ErrorResp(
+        'error.invalidGameData',
+        'Invalid Game Data'
+    ),
+    UserAlreadyConvert: new ErrorResp(
+        'error.userAlreadyConvert',
+        'User Already Convert'
+    ),
+    ConvertAddressNotMatch: new ErrorResp(
+        'error.convertAddressNotMatch',
+        'Convert Address Not Match'
+    ),
+    InvalidApiKey: new ErrorResp('error.invalidApiKey', 'Invalid Api Key'),
+    GameSeasonNotFound: new ErrorResp(
+        'error.gameSeasonNotFound',
+        'Game Season Not Found'
     ),
 }
 

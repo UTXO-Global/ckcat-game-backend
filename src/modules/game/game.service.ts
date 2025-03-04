@@ -9,12 +9,72 @@ import { GemsService } from '../gems/gems.service'
 import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
+import { Config } from '../../configs'
+import { GameReward } from './entities/game-reward.entity'
+import { CacheKeys, CacheManager } from '../../cache'
+import { UserGameAttributes } from '../user/entities/user-game-attributes.entity'
 
 @Service()
 export class GameService {
-    constructor(@Inject() private gemsService: GemsService) {}
+    constructor(
+        @Inject() private gemsService: GemsService,
+        @Inject() private config: Config,
+        @Inject() private cacheManager: CacheManager
+    ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
+            const user = await User.getUser(data.userId)
+            if (!user) throw Errors.UserNotFound
+            const decrypted = await this.decryptedGameData(data.data)
+            const items = decrypted?.parsedData?.items || []
+
+            const itemMap: Record<string, any> = {}
+            items.forEach((item) => {
+                itemMap[item.key] = item
+            })
+
+            const {
+                UserID: userItem,
+                LevelMonster: levelBossItem,
+                MoneyCoins: soulItem,
+                BeastHigest: catHighestItem,
+            } = itemMap
+
+            if (!userItem || userItem.valueString !== data.userId) {
+                throw Errors.UserNotMatch
+            }
+
+            // check level boss to process reward
+            const nextLevel = levelBossItem?.valueInt ?? 0
+            const catHighest = (catHighestItem?.valueInt ?? -1) + 1
+
+            if (
+                levelBossItem &&
+                this.config.conditionReward.includes(nextLevel)
+            ) {
+                await GameReward.createGameReward(
+                    { userId: data.userId, level: nextLevel },
+                    manager
+                )
+            }
+
+            const score = nextLevel + (1 - user.totalPlayingTime / 1e6) / 1e3
+
+            await Promise.all([
+                this.cacheManager.zAdd(
+                    CacheKeys.leaderBoard(),
+                    data.userId,
+                    score
+                ),
+
+                UserGameAttributes.createAttributes({
+                    userId: data.userId,
+                    amountBossKill: nextLevel,
+                    soul: Number(soulItem?.valueString ?? 0),
+                    catHighest: catHighest,
+                }),
+            ])
+
             return await Game.createGame(
                 plainToInstance(GameDTO, data),
                 manager
@@ -92,5 +152,9 @@ export class GameService {
             await User.updateUser(user, manager)
             return true
         })
+    }
+
+    private async decryptedGameData(data: string) {
+        return await Game.decryptedGameData(data)
     }
 }

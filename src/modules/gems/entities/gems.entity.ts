@@ -1,3 +1,4 @@
+import { AuthService } from './../../auth/auth.service'
 import {
     Column,
     Entity,
@@ -9,6 +10,16 @@ import { AppBaseEntity } from '../../../base/base.entity'
 import { AppDataSource } from '../../../database/connection'
 import { plainToInstance } from 'class-transformer'
 import { GemsDTO } from '../dtos/gems.dto'
+import { GemsConvertDTO } from '../dtos/gems-convert.dto'
+import { UserDTO } from '../../user/dtos/user.dto'
+import { User } from '../../user/entities/user.entity'
+import { Errors } from '../../../utils/error'
+import { GemsType } from '../types/gems.type'
+import Container from 'typedi'
+import { Package } from '../../package/entities/package.entity'
+import { PackageTypes } from '../../package/types/package-type.type'
+import { OrderDTO } from '../../order/dtos/order.dto'
+import { Order } from '../../order/entities/order.entity'
 
 @Entity()
 export class Gems extends AppBaseEntity {
@@ -46,5 +57,77 @@ export class Gems extends AppBaseEntity {
                 type,
             },
         })
+    }
+
+    static async convertGems(
+        data: GemsConvertDTO,
+        manager: EntityManager = AppDataSource.manager
+    ) {
+        const { initData, convertAddress, gems } = data
+
+        const authService = Container.get(AuthService)
+        const verifyData = await authService.verifyInitData(initData)
+        if (!verifyData) {
+            throw Errors.Unauthorized
+        }
+
+        const params = new URLSearchParams(initData)
+        const obj: Record<string, string> = {}
+        for (const [key, value] of params.entries()) {
+            obj[key] = value
+        }
+
+        const userObject = JSON.parse(obj.user)
+        const userId = userObject.id.toString()
+        const user = plainToInstance(
+            UserDTO,
+            {
+                id: userId,
+                firstName: userObject.first_name,
+                lastName: userObject.last_name,
+                gems: 0,
+            },
+            { excludeExtraneousValues: true }
+        )
+
+        let userProfile = await User.findOne({ where: { id: user.id } })
+
+        if (!userProfile) {
+            user.convertAddress = convertAddress
+            userProfile = await User.createUser(user, manager)
+        }
+
+        if (!userProfile.convertAddress) {
+            userProfile.convertAddress = convertAddress
+            await User.updateUser(userProfile, manager)
+        }
+
+        if (userProfile.convertAddress !== convertAddress) {
+            throw Errors.ConvertAddressNotMatch
+        }
+
+        userProfile.gems += gems
+
+        await Gems.createGems(
+            {
+                userId: userProfile.id,
+                type: GemsType.ConvertGems,
+                gems,
+            },
+            manager
+        )
+
+        const packageModel = await Package.getPackageByType(
+            PackageTypes.ConvertGems
+        )
+        const transactionDTO = new OrderDTO()
+        transactionDTO.userId = userProfile.id
+        transactionDTO.packageId = packageModel._id.toString()
+        transactionDTO.price = gems
+        transactionDTO.status = 'committed'
+        await Order.createOrder(transactionDTO, manager)
+
+        await User.updateUser(userProfile, manager)
+        return true
     }
 }

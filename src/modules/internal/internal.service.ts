@@ -5,10 +5,14 @@ import { UserWallet } from '../wallet/entities/user-wallet.entity'
 import axios from 'axios'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
+import { GemsService } from '../gems/gems.service'
 
 @Service()
 export class InternalService {
-    constructor(@Inject() private config: Config) {}
+    constructor(
+        @Inject() private config: Config,
+        @Inject() private gemsService: GemsService
+    ) {}
     async retrieveDailyCheckIn(walletAddress: string) {
         try {
             const response = await axios.post(

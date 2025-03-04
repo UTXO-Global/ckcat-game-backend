@@ -322,14 +322,14 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        totalActiveUsers: { $first: '$totalActiveUsers' },
+                        numOfUsers: { $first: '$totalActiveUsers' },
                     },
                 },
                 {
                     $project: {
                         _id: 0,
                         date: '$_id',
-                        totalActiveUsers: 1,
+                        numOfUsers: 1,
                     },
                 },
                 {
@@ -348,14 +348,14 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        totalActiveUsers: { $first: '$totalActiveUsers' }, // Lấy tổng người dùng đã tạo tài khoản
+                        numOfUsers: { $first: '$totalActiveUsers' }, // Lấy tổng người dùng đã tạo tài khoản
                     },
                 },
                 {
                     $project: {
                         _id: 0,
                         month: '$_id',
-                        totalActiveUsers: 1,
+                        numOfUsers: 1,
                     },
                 },
                 {
@@ -391,14 +391,14 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        totalCreatedUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người chơi hoạt động
+                        numOfUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người chơi hoạt động
                     },
                 },
                 {
                     $project: {
                         _id: 0,
                         date: '$_id',
-                        totalCreatedUsers: 1,
+                        numOfUsers: 1,
                     },
                 },
                 {
@@ -417,14 +417,14 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        totalCreatedUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người tạo tài khoản
+                        numOfUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người tạo tài khoản
                     },
                 },
                 {
                     $project: {
                         _id: 0,
                         month: '$_id',
-                        totalCreatedUsers: 1,
+                        numOfUsers: 1,
                     },
                 },
                 {

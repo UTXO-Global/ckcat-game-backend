@@ -21,6 +21,9 @@ export class UserDTO extends BaseDTO {
     unlockTraining: number
 
     @Expose()
+    convertAddress: string
+
+    @Expose()
     lastLogin: Date
 
     @Expose()

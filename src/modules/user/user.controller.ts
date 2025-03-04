@@ -7,6 +7,7 @@ import { AuthRequest } from '../auth/auth.middleware'
 import { UserRefreshTokenReqDTO } from './dtos/user-refresh-token-req.dto'
 import { Config } from '../../configs'
 import { CKAuthRequest } from '../auth/auth.middleware'
+import { UserGetLeaderboardReqDTO } from './dtos/user-get-leaderboard.dto'
 
 @Service()
 export class UserController {
@@ -15,16 +16,10 @@ export class UserController {
         @Inject() public userService: UserService
     ) {}
 
-    async signIn(
-        req: AuthRequest,
-        res: Response,
-        next: NextFunction
-    ) {
+    async signIn(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { user } = req
-            res.send(
-                new ResponseWrapper(await this.userService.signIn(user))
-            )
+            res.send(new ResponseWrapper(await this.userService.signIn(user)))
         } catch (err) {
             next(err)
         }
@@ -38,18 +33,16 @@ export class UserController {
         try {
             const params = req.body
             res.send(
-                new ResponseWrapper(await this.userService.refreshToken(params.refreshToken))
+                new ResponseWrapper(
+                    await this.userService.refreshToken(params.refreshToken)
+                )
             )
         } catch (err) {
             next(err)
         }
     }
 
-    signOut = async (
-        req: CKAuthRequest,
-        res: Response,
-        next: NextFunction
-    ) => {
+    signOut = async (req: CKAuthRequest, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers['authorization']
             const [, token] = authHeader && authHeader.split(' ')
@@ -75,4 +68,20 @@ export class UserController {
         }
     }
 
+    getLeaderboard = async (
+        req: DataRequest<UserGetLeaderboardReqDTO>,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            req.data.userId = req.userId
+            const { user, leaderBoard, pagination } =
+                await this.userService.getLeaderBoard(req.data)
+            res.send(
+                new ResponseWrapper({ user, leaderBoard }, null, pagination)
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
 }
