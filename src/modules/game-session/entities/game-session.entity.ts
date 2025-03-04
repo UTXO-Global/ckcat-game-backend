@@ -25,63 +25,48 @@ export class GameSession extends AppBaseEntity {
     ) {
         const { duration, userId } = data
 
-        const gameSession = await GameSession.save({
-            userId,
-            duration,
-        })
-
-        const user = await User.findOne({
-            where: {
-                id: userId,
-            },
-        })
-
-        if (!user) {
-            throw Errors.UserNotFound
-        }
-
-        user.lastLogin = gameSession.createdAt
-        user.totalLaunch += 1
-        user.totalPlayingTime += duration
-
-        await User.updateUser(user, manager)
-
-        // Handle stats active users
+        // handle game stats
         const now = getNowUtc()
         const statsDate = new Date(now)
         statsDate.setUTCHours(0, 0, 0, 0)
-
         const endOfDay = new Date(now)
         endOfDay.setUTCHours(23, 59, 59, 999)
 
         let gameStats = await manager.findOne(GameStats, {
             where: { statsDate },
         })
-        const repos = AppDataSource.getMongoRepository(GameSession)
-
-        const existingSession = await repos.findOne({
-            where: {
-                userId,
-                createdAt: {
-                    $gte: statsDate,
-                    $lt: endOfDay,
-                },
-            },
-        })
 
         if (!gameStats) {
             gameStats = await GameStats.createGameStats(
-                {
-                    statsDate,
-                    totalCreatedUsers: 0,
-                    totalActiveUsers: 1,
-                },
+                { statsDate, totalCreatedUsers: 0, totalActiveUsers: 0 },
                 manager
             )
-        } else if (!existingSession) {
+        }
+
+        const repos = AppDataSource.getMongoRepository(GameSession)
+        const sessionCount = await repos.findOne({
+            where: {
+                userId,
+                createdAt: { $gte: statsDate, $lt: endOfDay },
+            },
+        })
+
+        if (!sessionCount) {
             gameStats.totalActiveUsers += 1
             await manager.save(gameStats)
         }
+
+        // Handle game session
+        const gameSession = await GameSession.save({ userId, duration })
+
+        // update user
+        const user = await User.findOne({ where: { id: userId } })
+        if (!user) throw Errors.UserNotFound
+
+        user.lastLogin = gameSession.createdAt
+        user.totalLaunch += 1
+        user.totalPlayingTime += duration
+        await User.updateUser(user, manager)
 
         return true
     }
