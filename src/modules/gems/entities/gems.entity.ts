@@ -106,7 +106,7 @@ export class Gems extends AppBaseEntity {
             throw Errors.ConvertAddressNotMatch
         }
 
-        userProfile.gems = gems
+        userProfile.gems += gems
 
         await Gems.createGems(
             {
