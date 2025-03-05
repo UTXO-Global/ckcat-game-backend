@@ -30,7 +30,7 @@ export class GameSeason {
 
         const gameSeason = await AppDataSource.getMongoRepository(
             GameSeason
-        ).find()
+        ).findOne({ where: { isActive: true } })
 
         if (!gameSeason) {
             throw Errors.GameSeasonNotFound
