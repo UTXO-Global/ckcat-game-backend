@@ -22,15 +22,12 @@ export class GameSeason {
     @Column()
     endDate: Date
 
-    @Column()
-    isActive: boolean
-
-    static async getGameSeason() {
-        const now = getNowUtc()
-
+    static async getGameSeason(dateTime: Date) {
         const gameSeason = await AppDataSource.getMongoRepository(
             GameSeason
-        ).findOne({ where: { isActive: true } })
+        ).findOne({
+            where: { endDate: { $gte: new Date(dateTime) } },
+        })
 
         if (!gameSeason) {
             throw Errors.GameSeasonNotFound
