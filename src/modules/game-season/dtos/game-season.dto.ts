@@ -12,7 +12,4 @@ export class GameSeasonDTO {
 
     @Expose()
     endDate: Date
-
-    @Expose()
-    isActive: boolean
 }
