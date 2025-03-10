@@ -20,6 +20,7 @@ import { DashboardRoute } from './modules/dashboard/dashboard.route'
 import { GameAirdropAdminRoute } from './modules/game-airdrop/admin/game-airdrop-admin.route'
 import { GameAirdropRoute } from './modules/game-airdrop/game-airdrop.route'
 import { GameSeasonRoute } from './modules/game-season/game-season.route'
+import { OrderAdminRoute } from './modules/order/admin/order-admin.route'
 
 const app = new App(config, [
     {
@@ -51,6 +52,7 @@ const app = new App(config, [
                     UserAdminRoute,
                     DashboardRoute,
                     GameAirdropAdminRoute,
+                    OrderAdminRoute,
                 ],
             },
         ],
