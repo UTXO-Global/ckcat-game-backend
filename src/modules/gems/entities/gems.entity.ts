@@ -20,6 +20,7 @@ import { Package } from '../../package/entities/package.entity'
 import { PackageTypes } from '../../package/types/package-type.type'
 import { OrderDTO } from '../../order/dtos/order.dto'
 import { Order } from '../../order/entities/order.entity'
+import { generateRandomString } from '../../../utils'
 
 @Entity()
 export class Gems extends AppBaseEntity {
@@ -122,6 +123,7 @@ export class Gems extends AppBaseEntity {
         )
         const transactionDTO = new OrderDTO()
         transactionDTO.userId = userProfile.id
+        transactionDTO.orderId = generateRandomString(12)
         transactionDTO.packageId = packageModel._id.toString()
         transactionDTO.price = gems
         transactionDTO.status = 'committed'
