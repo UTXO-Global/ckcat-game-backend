@@ -9,7 +9,15 @@ import { AppBaseEntity } from '../../../base/base.entity'
 import { UserGameAttributeDTO } from '../dtos/user-game-attribute.dto'
 import { AppDataSource } from '../../../database/connection'
 import { plainToInstance } from 'class-transformer'
+import { User } from './user.entity'
 
+interface UserWithAttributes extends User {
+    attributes?: {
+        amountBossKill?: number
+        soul?: number
+        catHighest?: number
+    }
+}
 @Entity()
 export class UserGameAttributes extends AppBaseEntity {
     @ObjectIdColumn()
@@ -56,23 +64,81 @@ export class UserGameAttributes extends AppBaseEntity {
         return attributes
     }
 
-    static async getAttributesByIds(
-        userIds: string[]
-    ): Promise<Map<string, UserGameAttributeDTO>> {
-        const userAttributesRepos =
-            AppDataSource.getMongoRepository(UserGameAttributes)
+    static async getUsersWithAttributesByIds(userIds: string[]) {
+        const userRepos = AppDataSource.getMongoRepository(User)
 
-        const attributes = await userAttributesRepos.find({
-            where: { userId: { $in: userIds } },
-        })
+        const users: UserWithAttributes[] = await userRepos
+            .aggregate([
+                { $match: { id: { $in: userIds } } },
+                {
+                    $lookup: {
+                        from: 'user_game_attributes',
+                        localField: 'id',
+                        foreignField: 'userId',
+                        as: 'attributes',
+                    },
+                },
+                {
+                    $unwind: {
+                        path: '$attributes',
+                        preserveNullAndEmptyArrays: true,
+                    },
+                },
+            ])
+            .toArray()
 
         return new Map(
-            attributes.map((attr) => [
-                attr.userId,
-                plainToInstance(UserGameAttributeDTO, attr, {
-                    excludeExtraneousValues: true,
-                }),
+            users.map((user) => [
+                user.id,
+                {
+                    userId: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    username: user.username,
+                    amountBossKill: user.attributes?.amountBossKill || 0,
+                    soul: user.attributes?.soul || 0,
+                    catHighest: user.attributes?.catHighest || 0,
+                    totalPlayingTime: user.totalPlayingTime || 0,
+                },
             ])
         )
+    }
+
+    static async getUserWithAttributesById(userId: string) {
+        const userRepos = AppDataSource.getMongoRepository(User)
+
+        const user: UserWithAttributes[] = await userRepos
+            .aggregate([
+                { $match: { id: userId } },
+                {
+                    $lookup: {
+                        from: 'user_game_attributes',
+                        localField: 'id',
+                        foreignField: 'userId',
+                        as: 'attributes',
+                    },
+                },
+                {
+                    $unwind: {
+                        path: '$attributes',
+                        preserveNullAndEmptyArrays: true,
+                    },
+                },
+                { $limit: 1 },
+            ])
+            .toArray()
+
+        if (!user.length) return null
+
+        return {
+            userId: user[0].id,
+            firstName: user[0].firstName,
+            lastName: user[0].lastName,
+            username: user[0].username,
+            amountBossKill: user[0].attributes?.amountBossKill || 0,
+            soul: user[0].attributes?.soul || 0,
+            catHighest: user[0].attributes?.catHighest || 0,
+            totalPlayingTime: user[0].totalPlayingTime || 0,
+        }
     }
 }

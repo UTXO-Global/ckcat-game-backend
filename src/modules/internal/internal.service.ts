@@ -5,12 +5,7 @@ import { UserWallet } from '../wallet/entities/user-wallet.entity'
 import axios from 'axios'
 import { InternalRefferalReqDTO } from './dtos/internal-refferal.dto'
 import { InternalLeaderboardReqDTO } from './dtos/internal-leaderboard.dto'
-import { InternalConvertPointToGemsDTO } from './dtos/internal-convert-point-to-gems.dto'
 import { GemsService } from '../gems/gems.service'
-import { User } from '../user/entities/user.entity'
-import { startTransaction } from '../../database/connection'
-import { Gems } from '../gems/entities/gems.entity'
-import { GemsType } from '../gems/types/gems.type'
 
 @Service()
 export class InternalService {
@@ -227,73 +222,5 @@ export class InternalService {
         const list = await this.retrieveListReferral(userWallet.address)
 
         return list
-    }
-
-    async deductPointInternal(walletAddress: string, points: number) {
-        try {
-            const response = await axios.post(
-                `${this.config.apiUrl}/ckcat/internal/points/deduct`,
-                {
-                    user_address: walletAddress,
-                    points: points,
-                },
-                {
-                    headers: {
-                        'API-KEY': this.config.apiKey,
-                    },
-                }
-            )
-            if (!response || !response.data) {
-                throw Errors.InternalServiceError
-            }
-
-            return response.data
-        } catch (error) {
-            if (error.response) {
-                throw {
-                    status: error.response.status,
-                    message: error.response.data?.message || 'Unknown error',
-                }
-            } else {
-                throw Errors.InternalServiceError
-            }
-        }
-    }
-
-    async convertPointToGems(data: InternalConvertPointToGemsDTO) {
-        return startTransaction(async (manager) => {
-            const { userId, points } = data
-            const userWallet = await UserWallet.getWalletByUserId(userId)
-            if (!userWallet) {
-                throw Errors.WalletAddressNotFound
-            }
-
-            const profile = await User.getUser(userId)
-            if (!profile) throw Errors.UserNotFound
-
-            if (profile.isConvert) throw Errors.UserAlreadyConvert
-
-            const deduct = this.deductPointInternal(userWallet.address, points)
-
-            const gemsReceive = points / 1
-
-            if (deduct) {
-                profile.gems += gemsReceive
-                profile.isConvert = true
-
-                await Gems.createGems(
-                    {
-                        userId,
-                        type: GemsType.ConvertPoints,
-                        gems: gemsReceive,
-                    },
-                    manager
-                )
-
-                await User.updateUser(profile, manager)
-            }
-
-            return true
-        })
     }
 }

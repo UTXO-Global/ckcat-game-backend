@@ -36,13 +36,12 @@ export class AuthMiddleware {
             }
             const payload = await this.authService.verifyToken(token)
             req.userId = payload.userId
-            
+
             next()
         } catch (error) {
             next(Errors.Unauthorized)
         }
     }
-
 
     async authorizeTelegram(
         req: AuthRequest,
@@ -77,6 +76,20 @@ export class AuthMiddleware {
                 return
             }
             throw Errors.Unauthorized
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    async authorizeApiKey(req: Request, res: Response, next: NextFunction) {
+        try {
+            const apiKey = req.headers['x-api-key']
+
+            if (!apiKey || apiKey !== this.config.apiKey) {
+                throw Errors.InvalidApiKey
+            }
+
+            next()
         } catch (err) {
             next(err)
         }

@@ -10,9 +10,9 @@ import { EventSetting } from '../event-setting/entities/event-setting.entity'
 import { EventSettingKey } from '../event-setting/types/event-setting.type'
 import { Gems } from '../gems/entities/gems.entity'
 import { Config } from '../../configs'
-import { GameReward } from './entities/game-reward.entity'
 import { CacheKeys, CacheManager } from '../../cache'
 import { UserGameAttributes } from '../user/entities/user-game-attributes.entity'
+import { GameLogHistory } from './entities/game-log-history.entity'
 
 @Service()
 export class GameService {
@@ -23,6 +23,8 @@ export class GameService {
     ) {}
     async createGame(data: GameDTO) {
         return await startTransaction(async (manager) => {
+            const user = await User.getUser(data.userId)
+            if (!user) throw Errors.UserNotFound
             const decrypted = await this.decryptedGameData(data.data)
             const items = decrypted?.parsedData?.items || []
 
@@ -43,30 +45,33 @@ export class GameService {
             }
 
             // check level boss to process reward
-            const nextLevel = (levelBossItem?.valueInt ?? -1) + 1
+            const nextLevel = levelBossItem?.valueInt ?? 0
+            const catHighest = (catHighestItem?.valueInt ?? -1) + 1
 
-            if (
-                levelBossItem &&
-                this.config.conditionReward.includes(nextLevel)
-            ) {
-                await GameReward.createGameReward(
-                    { userId: data.userId, level: nextLevel },
-                    manager
-                )
-            }
+            // calculate score for cache leaderboard
+            const score = nextLevel + (1 - user.totalPlayingTime / 1e6) / 1e3
 
             await Promise.all([
                 this.cacheManager.zAdd(
                     CacheKeys.leaderBoard(),
                     data.userId,
-                    nextLevel
+                    score
                 ),
+
                 UserGameAttributes.createAttributes({
                     userId: data.userId,
                     amountBossKill: nextLevel,
                     soul: Number(soulItem?.valueString ?? 0),
-                    catHighest: catHighestItem?.valueInt ?? 0,
+                    catHighest: catHighest,
                 }),
+
+                GameLogHistory.createGameLogHistory(
+                    {
+                        userId: data.userId,
+                        data: data.data,
+                    },
+                    manager
+                ),
             ])
 
             return await Game.createGame(

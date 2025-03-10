@@ -7,6 +7,7 @@ import { AuthRequest } from '../auth/auth.middleware'
 import { UserRefreshTokenReqDTO } from './dtos/user-refresh-token-req.dto'
 import { Config } from '../../configs'
 import { CKAuthRequest } from '../auth/auth.middleware'
+import { UserGetLeaderboardReqDTO } from './dtos/user-get-leaderboard.dto'
 
 @Service()
 export class UserController {
@@ -68,16 +69,16 @@ export class UserController {
     }
 
     getLeaderboard = async (
-        req: CKAuthRequest,
+        req: DataRequest<UserGetLeaderboardReqDTO>,
         res: Response,
         next: NextFunction
     ) => {
         try {
-            const { userId } = req
+            req.data.userId = req.userId
+            const { user, leaderBoard, pagination } =
+                await this.userService.getLeaderBoard(req.data)
             res.send(
-                new ResponseWrapper(
-                    await this.userService.getLeaderBoard(userId)
-                )
+                new ResponseWrapper({ user, leaderBoard }, null, pagination)
             )
         } catch (err) {
             next(err)

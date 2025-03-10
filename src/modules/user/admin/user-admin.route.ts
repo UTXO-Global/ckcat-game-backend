@@ -39,5 +39,13 @@ export class UserAdminRoute implements BaseRoute {
             transformAndValidate(UserAdminGetReqDTO),
             this.userAdminController.getUser.bind(this.userAdminController)
         )
+
+        // update redis leaderboard
+        this.router.post(
+            '/redis-leaderboard',
+            this.userAdminController.updateRedisLeaderboard.bind(
+                this.userAdminController
+            )
+        )
     }
 }

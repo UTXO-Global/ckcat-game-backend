@@ -7,9 +7,11 @@ import { plainToInstance } from 'class-transformer'
 import { Errors } from '../../../utils/error'
 import { GemsDTO } from '../../gems/dtos/gems.dto'
 import { getNowUtc } from '../../../utils'
+import { GameStats } from '../../game-stats/entities/game-stats.entity'
 import Container from 'typedi'
 import { CacheKeys, CacheManager } from '../../../cache'
 import { UserGameAttributes } from './user-game-attributes.entity'
+import { UserGetLeaderboardReqDTO } from '../dtos/user-get-leaderboard.dto'
 
 @Entity()
 export class User extends AppBaseEntity {
@@ -35,7 +37,7 @@ export class User extends AppBaseEntity {
     unlockTraining: number
 
     @Column()
-    isConvert: boolean
+    convertAddress: string
 
     @Column()
     lastLogin: Date
@@ -59,11 +61,32 @@ export class User extends AppBaseEntity {
             User.create({
                 ...createFields,
                 unlockTraining: 0,
-                isConvert: false,
             })
         )
-        const cacheManager = Container.get(CacheManager)
-        await cacheManager.zAdd(CacheKeys.leaderBoard(), user.id, 0)
+
+        // Lấy ngày hiện tại
+        const now = getNowUtc()
+        const statsDate = new Date(now)
+        statsDate.setUTCHours(0, 0, 0, 0)
+
+        // Kiểm tra xem đã có GameStats của ngày chưa
+        let gameStats = await manager.findOne(GameStats, {
+            where: { statsDate },
+        })
+
+        if (!gameStats) {
+            gameStats = await GameStats.createGameStats(
+                {
+                    statsDate,
+                    totalCreatedUsers: 1,
+                    totalActiveUsers: 0,
+                },
+                manager
+            )
+        } else {
+            gameStats.totalCreatedUsers += 1
+            await manager.save(gameStats)
+        }
 
         return user
     }
@@ -123,91 +146,70 @@ export class User extends AppBaseEntity {
         return user
     }
 
-    static async getLeaderBoard(userId: string) {
+    static async getLeaderBoard(data: UserGetLeaderboardReqDTO) {
+        const { userId, pagination } = data
         const cacheManager = Container.get(CacheManager)
 
-        const ids: string[] = await cacheManager.getLeaderBoardWithTop(
+        const allIds = await cacheManager.getPaginatedLeaderBoardIds(
             CacheKeys.leaderBoard(),
-            99
+            pagination.getOffset(),
+            pagination.limit
         )
 
-        const allUserIds = [userId, ...ids]
-        const [users, attributes] = await Promise.all([
-            this.getUsersByIds(allUserIds),
-            UserGameAttributes.getAttributesByIds(allUserIds),
-        ])
+        let userRank = await cacheManager.getUserRank(
+            CacheKeys.leaderBoard(),
+            userId
+        )
+        userRank = userRank !== null ? userRank + 1 : null
 
-        const leaderBoardEntries = ids
-            .map((id) => {
-                const user = users.get(id)
-                const attr = attributes.get(id)
-
-                return user
-                    ? {
-                          userId: user.id,
-                          firstName: user.firstName,
-                          lastName: user.lastName,
-                          username: user.username,
-                          bossKill: attr?.amountBossKill || 0,
-                          soul: attr?.soul || 0,
-                          catHighest: attr?.catHighest || 0,
-                          duration: user.totalPlayingTime || 0,
-                      }
-                    : null
-            })
-            .filter((entry) => entry !== null)
-
-        // Sort
-        leaderBoardEntries.sort((a, b) => {
-            if (a.bossKill === b.bossKill) {
-                return a.duration - b.duration
-            }
-            return b.bossKill - a.bossKill
-        })
-
-        const sortedLeaderBoard = leaderBoardEntries.map((entry, index) => ({
-            ...entry,
-            rank: index + 1,
+        const usersMap = await UserGameAttributes.getUsersWithAttributesByIds(
+            allIds
+        )
+        let rankedUsers = allIds.map((id, index) => ({
+            ...usersMap.get(id),
+            rank: pagination.getOffset() + index + 1,
         }))
 
-        const user = users.get(userId)
-        const attr = attributes.get(userId)
+        let userEntry =
+            rankedUsers.find((entry) => entry.userId === userId) || null
 
-        const userEntry = {
-            userId: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            bossKill: attr?.amountBossKill || 0,
-            soul: attr?.soul || 0,
-            catHighest: attr?.catHighest || 0,
-            duration: user.totalPlayingTime || 0,
-            rank:
-                sortedLeaderBoard.find(
-                    (entry) => entry.username === user?.username
-                )?.rank || sortedLeaderBoard.length + 1,
+        if (!userEntry) {
+            const userAttributes =
+                await UserGameAttributes.getUserWithAttributesById(userId)
+
+            if (userAttributes) {
+                userEntry = { ...userAttributes, rank: userRank }
+            }
         }
+
+        pagination.total = await cacheManager.getLeaderBoardTotal(
+            CacheKeys.leaderBoard()
+        )
 
         return {
             user: userEntry,
-            leaderBoard: sortedLeaderBoard,
+            leaderBoard: rankedUsers,
+            pagination,
         }
     }
 
-    static async getUsersByIds(
-        userIds: string[]
-    ): Promise<Map<string, UserDTO>> {
-        const userRepos = AppDataSource.getMongoRepository(User)
+    static async updateRedisLeaderboard() {
+        const profiles = await User.find()
+        const cacheManager = Container.get(CacheManager)
 
-        const users = await userRepos.find({ where: { id: { $in: userIds } } })
+        const updates = profiles.map(async (profile) => {
+            const attribute = await UserGameAttributes.findOne({
+                where: { userId: profile.id },
+            })
+            if (!attribute) return 0
 
-        return new Map(
-            users.map((user) => [
-                user.id,
-                plainToInstance(UserDTO, user, {
-                    excludeExtraneousValues: true,
-                }),
-            ])
-        )
+            const score =
+                attribute.amountBossKill +
+                (1 - profile.totalPlayingTime / 1e6) / 1e3
+            return cacheManager.zAdd(CacheKeys.leaderBoard(), profile.id, score)
+        })
+
+        const results = await Promise.all(updates)
+        return results.reduce((acc, val) => acc + val, 0)
     }
 }
