@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer'
 import { BaseReqDTO } from '../../../base/base.dto'
+import { IsNumber } from 'class-validator'
 
 export class GemsConvertDTO extends BaseReqDTO {
     @Expose()
@@ -9,5 +10,6 @@ export class GemsConvertDTO extends BaseReqDTO {
     convertAddress: string
 
     @Expose()
+    @IsNumber()
     gems: number
 }
