@@ -8,6 +8,9 @@ import { AdminLogInReqDTO } from './dtos/admin-log-in.dto'
 import { AdminLogOutReqDTO } from './dtos/admin-log-out.dto'
 import { AdminRefreshTokenReqDTO } from './dtos/admin-refresh-token.dto'
 import { AuthCMSReqDTO } from '../../base/base.dto'
+import { AuthAdminService } from './auth/auth-admin.service'
+import { AuthMiddleware } from '../auth/auth.middleware'
+import { AdminDTO } from './dtos/admin.dto'
 
 @Service()
 export class AdminRoute implements BaseRoute {
@@ -16,7 +19,8 @@ export class AdminRoute implements BaseRoute {
 
     constructor(
         @Inject() private adminController: AdminController,
-        @Inject() private authAdminMiddleware: AuthAdminMiddleware
+        @Inject() private authAdminMiddleware: AuthAdminMiddleware,
+        @Inject() private authMiddleware: AuthMiddleware
     ) {
         this.initRoutes()
     }
@@ -45,6 +49,13 @@ export class AdminRoute implements BaseRoute {
             this.authAdminMiddleware.authorize.bind(this.authAdminMiddleware),
             transformAndValidate(AuthCMSReqDTO),
             this.adminController.getProfile.bind(this.adminController)
+        )
+
+        this.router.post(
+            '/admin',
+            this.authMiddleware.authorizeApiKey.bind(this.authMiddleware),
+            transformAndValidate(AdminDTO),
+            this.adminController.createAdmin.bind(this.adminController)
         )
     }
 }

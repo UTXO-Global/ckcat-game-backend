@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer'
-import { BaseDTO } from '../../../base/base.dto'
+import { BaseDTO, BaseReqDTO } from '../../../base/base.dto'
 
-export class AdminDTO extends BaseDTO {
+export class AdminDTO extends BaseReqDTO {
     @Expose()
     id: string
 
