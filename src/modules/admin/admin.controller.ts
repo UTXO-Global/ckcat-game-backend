@@ -7,6 +7,7 @@ import { ResponseWrapper } from '../../utils/response'
 import { AdminLogOutReqDTO } from './dtos/admin-log-out.dto'
 import { AdminRefreshTokenReqDTO } from './dtos/admin-refresh-token.dto'
 import { AuthCMSReqDTO } from '../../base/base.dto'
+import { AdminDTO } from './dtos/admin.dto'
 
 @Service()
 export class AdminController {
@@ -58,6 +59,19 @@ export class AdminController {
     ) {
         try {
             const profile = await this.adminService.getProfile(req.data)
+            res.send(new ResponseWrapper(profile))
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    async createAdmin(
+        req: DataRequest<AdminDTO>,
+        res: Response,
+        next: NextFunction
+    ) {
+        try {
+            const profile = await this.adminService.createAdmin(req.data)
             res.send(new ResponseWrapper(profile))
         } catch (err) {
             next(err)

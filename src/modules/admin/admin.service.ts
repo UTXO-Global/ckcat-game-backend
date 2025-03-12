@@ -8,6 +8,10 @@ import { AdminLogOutReqDTO } from './dtos/admin-log-out.dto'
 import { logger } from '../../utils/logger'
 import { AdminRefreshTokenReqDTO } from './dtos/admin-refresh-token.dto'
 import { AuthCMSReqDTO } from '../../base/base.dto'
+import { AdminDTO } from './dtos/admin.dto'
+import { AppDataSource } from '../../database/connection'
+import { Admin } from './entities/admin.entity'
+import { randomID } from '../../utils'
 
 @Service()
 export class AdminService {
@@ -75,5 +79,22 @@ export class AdminService {
         const profile = await AdminRepos.getAdmin(data.email)
         profile.hideSensitiveData()
         return profile
+    }
+
+    async createAdmin(data: AdminDTO) {
+        const { id, email, password } = data
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        const repos = AppDataSource.getMongoRepository(Admin)
+        const admin = repos.create({
+            id: randomID(),
+            email,
+            password: hashedPassword,
+            salt: '',
+        })
+
+        return await repos.save(admin)
     }
 }
