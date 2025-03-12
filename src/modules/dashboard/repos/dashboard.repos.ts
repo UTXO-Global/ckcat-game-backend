@@ -118,180 +118,6 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
         }
     },
 
-    // async getNumOfPlayers(data: DashboardGetNumOfPlayerReqDTO) {
-    //     const { fromDate, toDate, type } = data
-    //     const gameSessionRepo = AppDataSource.getMongoRepository(GameSession)
-
-    //     const startDate = new Date(fromDate)
-    //     const startOfDate = new Date(startDate.setUTCHours(0, 0, 0, 0))
-    //     const endDate = new Date(toDate)
-    //     const endOfDate = new Date(endDate.setUTCHours(23, 59, 59, 999))
-
-    //     const pipline = []
-
-    //     pipline.push({
-    //         $match: {
-    //             createdAt: {
-    //                 $gte: startOfDate,
-    //                 $lte: endOfDate,
-    //             },
-    //         },
-    //     })
-
-    //     if (type === AnalysisType.DAU) {
-    //         pipline.push(
-    //             {
-    //                 $group: {
-    //                     _id: {
-    //                         $dateToString: {
-    //                             format: '%Y-%m-%d',
-    //                             date: '$createdAt',
-    //                         },
-    //                     },
-    //                     uniqueUsers: { $addToSet: '$userId' },
-    //                 },
-    //             },
-    //             {
-    //                 $addFields: {
-    //                     numOfUsers: { $size: '$uniqueUsers' },
-    //                 },
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 0,
-    //                     date: '$_id',
-    //                     numOfUsers: 1,
-    //                 },
-    //             },
-    //             {
-    //                 $sort: {
-    //                     date: 1,
-    //                 },
-    //             }
-    //         )
-    //     } else {
-    //         pipline.push(
-    //             {
-    //                 $group: {
-    //                     _id: {
-    //                         $dateToString: {
-    //                             format: '%m',
-    //                             date: '$createdAt',
-    //                         },
-    //                     },
-    //                     uniqueUsers: { $addToSet: '$userId' },
-    //                 },
-    //             },
-    //             {
-    //                 $addFields: {
-    //                     numOfUsers: { $size: '$uniqueUsers' },
-    //                 },
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 0,
-    //                     month: '$_id',
-    //                     numOfUsers: 1,
-    //                 },
-    //             },
-    //             {
-    //                 $sort: {
-    //                     month: 1,
-    //                 },
-    //             }
-    //         )
-    //     }
-
-    //     const chartItems = await gameSessionRepo.aggregate(pipline).toArray()
-
-    //     const createdPipline = []
-
-    //     createdPipline.push({
-    //         $match: {
-    //             createdAt: {
-    //                 $gte: startOfDate,
-    //                 $lte: endOfDate,
-    //             },
-    //         },
-    //     })
-
-    //     if (type === AnalysisType.DAU) {
-    //         createdPipline.push(
-    //             {
-    //                 $group: {
-    //                     _id: {
-    //                         $dateToString: {
-    //                             format: '%Y-%m-%d',
-    //                             date: '$createdAt',
-    //                         },
-    //                     },
-    //                     uniqueUsers: { $addToSet: '$id' },
-    //                 },
-    //             },
-    //             {
-    //                 $addFields: {
-    //                     numOfUsers: { $size: '$uniqueUsers' },
-    //                 },
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 0,
-    //                     date: '$_id',
-    //                     numOfUsers: 1,
-    //                 },
-    //             },
-    //             {
-    //                 $sort: {
-    //                     date: 1,
-    //                 },
-    //             }
-    //         )
-    //     } else {
-    //         createdPipline.push(
-    //             {
-    //                 $group: {
-    //                     _id: {
-    //                         $dateToString: {
-    //                             format: '%m',
-    //                             date: '$createdAt',
-    //                         },
-    //                     },
-    //                     uniqueUsers: { $addToSet: '$id' },
-    //                 },
-    //             },
-    //             {
-    //                 $addFields: {
-    //                     numOfUsers: { $size: '$uniqueUsers' },
-    //                 },
-    //             },
-    //             {
-    //                 $project: {
-    //                     _id: 0,
-    //                     month: '$_id',
-    //                     numOfUsers: 1,
-    //                 },
-    //             },
-    //             {
-    //                 $sort: {
-    //                     month: 1,
-    //                 },
-    //             }
-    //         )
-    //     }
-
-    //     const createdChartItems = await DashboardRepos.aggregate(
-    //         createdPipline
-    //     ).toArray()
-
-    //     return plainToInstance(
-    //         AnalysisDTO,
-    //         { activeUsers: chartItems, createdUsers: createdChartItems },
-    //         {
-    //             excludeExtraneousValues: true,
-    //         }
-    //     )
-    // },
-
     async getNumOfPlayers(data: DashboardGetNumOfPlayerReqDTO) {
         const { fromDate, toDate, type } = data
         const gameStatsRepo = AppDataSource.getMongoRepository(GameStats)
@@ -311,7 +137,6 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                 },
             },
         })
-
         if (type === AnalysisType.DAU) {
             pipline.push(
                 {
@@ -322,7 +147,7 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        numOfUsers: { $first: '$totalActiveUsers' },
+                        numOfUsers: { $sum: '$totalActiveUsers' }, // Tính tổng thay vì lấy first
                     },
                 },
                 {
@@ -348,7 +173,7 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        numOfUsers: { $first: '$totalActiveUsers' }, // Lấy tổng người dùng đã tạo tài khoản
+                        numOfUsers: { $sum: '$totalActiveUsers' }, // Tính tổng số người dùng hoạt động trong tháng
                     },
                 },
                 {
@@ -391,7 +216,7 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        numOfUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người chơi hoạt động
+                        numOfUsers: { $sum: '$totalCreatedUsers' }, // Lấy tổng người chơi hoạt động
                     },
                 },
                 {
@@ -417,7 +242,7 @@ export const DashboardRepos = AppDataSource.getMongoRepository(User).extend({
                                 date: '$statsDate',
                             },
                         },
-                        numOfUsers: { $first: '$totalCreatedUsers' }, // Lấy tổng người tạo tài khoản
+                        numOfUsers: { $sum: '$totalCreatedUsers' }, // Lấy tổng người tạo tài khoản
                     },
                 },
                 {
