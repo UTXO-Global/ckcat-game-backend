@@ -44,14 +44,18 @@ export class GameSession extends AppBaseEntity {
         }
 
         const repos = AppDataSource.getMongoRepository(GameSession)
-        const sessionCount = await repos.findOne({
+        const sessionExists = await repos.findOne({
             where: {
                 userId,
-                createdAt: { $gte: statsDate, $lt: endOfDay },
+                createdAt: {
+                    $gte: new Date(statsDate),
+                    $lt: new Date(endOfDay),
+                },
             },
+            select: ['_id'],
         })
 
-        if (!sessionCount) {
+        if (!sessionExists) {
             gameStats.totalActiveUsers += 1
             await manager.save(gameStats)
         }
